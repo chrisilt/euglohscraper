@@ -56,14 +56,14 @@ STATE_FILE = os.environ.get("STATE_FILE", "./seen.json")
 FEED_FILE = os.environ.get("FEED_FILE", "./feed.xml")
 WEBHOOK_URL = os.environ.get("WEBHOOK_URL")  # optional: Zapier/Make webhook
 USER_AGENT = os.environ.get("USER_AGENT", "eugloh-event-checker/1.0")
-REQUEST_TIMEOUT = int(os.environ.get("REQUEST_TIMEOUT", "15"))
+REQUEST_TIMEOUT = int(os.environ.get("REQUEST_TIMEOUT") or "15")
 
 # Email notification configuration
 EMAIL_ENABLED = os.environ.get("EMAIL_ENABLED", "").lower() == "true"
 EMAIL_FROM = os.environ.get("EMAIL_FROM", "")
 EMAIL_TO = os.environ.get("EMAIL_TO", "")
 EMAIL_SMTP_HOST = os.environ.get("EMAIL_SMTP_HOST", "")
-EMAIL_SMTP_PORT = int(os.environ.get("EMAIL_SMTP_PORT", "587"))
+EMAIL_SMTP_PORT = int(os.environ.get("EMAIL_SMTP_PORT") or "587")
 EMAIL_SMTP_USER = os.environ.get("EMAIL_SMTP_USER", "")
 EMAIL_SMTP_PASSWORD = os.environ.get("EMAIL_SMTP_PASSWORD", "")
 
