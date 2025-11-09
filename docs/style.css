@@ -63,11 +63,17 @@ h1 {
   font-size: 2.5rem;
   font-weight: 800;
   margin: 0 0 0.5rem 0;
+  color: var(--text-primary);
   background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   letter-spacing: -0.02em;
+  /* Fallback for browsers that don't support background-clip */
+  @supports not (background-clip: text) {
+    color: var(--primary);
+    -webkit-text-fill-color: initial;
+  }
 }
 
 .lead {
@@ -284,10 +290,16 @@ code {
   }
 
   h1 {
+    color: var(--text-primary);
     background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+    /* Fallback for dark mode */
+    @supports not (background-clip: text) {
+      color: #60a5fa;
+      -webkit-text-fill-color: initial;
+    }
   }
 
   .item {
