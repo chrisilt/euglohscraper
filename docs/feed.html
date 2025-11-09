@@ -24,6 +24,20 @@
               <input type="checkbox" id="hideRead" />
               <span>Hide read</span>
             </label>
+            <label class="filter-label">
+              <input type="checkbox" id="showUpcoming" />
+              <span>Upcoming deadlines only</span>
+            </label>
+          </div>
+          <div class="filter-group">
+            <label class="filter-label-select">
+              Sort by:
+              <select id="sortBy" class="sort-select">
+                <option value="default">Default order</option>
+                <option value="title">Title (A-Z)</option>
+                <option value="deadline">Deadline (earliest first)</option>
+              </select>
+            </label>
           </div>
         </div>
         
@@ -61,16 +75,29 @@
             return;
           }
           
-          allItems = items.map(it => ({
-            title: it.querySelector('title')?.textContent || 'Untitled',
-            link: it.querySelector('link')?.textContent || '#',
-            pubDate: it.querySelector('pubDate')?.textContent || '',
-            description: it.querySelector('description')?.textContent || '',
-            guid: it.querySelector('guid')?.textContent || '',
-            categories: Array.from(it.querySelectorAll('category')).map(c => c.textContent),
-            isNew: Array.from(it.querySelectorAll('category')).some(c => c.textContent === 'new'),
-            element: it
-          }));
+          allItems = items.map(it => {
+            const rawDescription = it.querySelector('description')?.textContent || '';
+            // Clean up description: remove "Find out more and register now" and extract deadline
+            let cleanDesc = rawDescription.replace(/^Find out more and register now\s*/i, '');
+            let deadline = null;
+            const deadlineMatch = cleanDesc.match(/Deadline:\s*(.+?)(\s*$|(?=\n))/i);
+            if (deadlineMatch) {
+              deadline = deadlineMatch[1].trim();
+            }
+            
+            return {
+              title: it.querySelector('title')?.textContent || 'Untitled',
+              link: it.querySelector('link')?.textContent || '#',
+              pubDate: it.querySelector('pubDate')?.textContent || '',
+              description: rawDescription,
+              cleanDescription: cleanDesc,
+              deadline: deadline,
+              guid: it.querySelector('guid')?.textContent || '',
+              categories: Array.from(it.querySelectorAll('category')).map(c => c.textContent),
+              isNew: Array.from(it.querySelectorAll('category')).some(c => c.textContent === 'new'),
+              element: it
+            };
+          });
           
           renderItems();
           updateStats();
@@ -84,6 +111,8 @@
         const searchTerm = document.getElementById('searchBox').value.toLowerCase();
         const showNewOnly = document.getElementById('showNewOnly').checked;
         const hideRead = document.getElementById('hideRead').checked;
+        const showUpcoming = document.getElementById('showUpcoming').checked;
+        const sortBy = document.getElementById('sortBy').value;
         
         let filtered = allItems.filter(item => {
           // Search filter
@@ -102,8 +131,34 @@
             return false;
           }
           
+          // Upcoming deadlines filter (show events with deadlines in the future or within 30 days)
+          if (showUpcoming && item.deadline) {
+            const deadlineDate = parseDeadlineDate(item.deadline);
+            if (deadlineDate) {
+              const now = new Date();
+              const daysUntil = Math.ceil((deadlineDate - now) / (1000 * 60 * 60 * 24));
+              if (daysUntil < 0 || daysUntil > 30) {
+                return false;
+              }
+            }
+          }
+          
           return true;
         });
+        
+        // Sort items
+        if (sortBy === 'title') {
+          filtered.sort((a, b) => a.title.localeCompare(b.title));
+        } else if (sortBy === 'deadline') {
+          filtered.sort((a, b) => {
+            const dateA = parseDeadlineDate(a.deadline);
+            const dateB = parseDeadlineDate(b.deadline);
+            if (!dateA && !dateB) return 0;
+            if (!dateA) return 1;
+            if (!dateB) return -1;
+            return dateA - dateB;
+          });
+        }
         
         if (filtered.length === 0) {
           content.innerHTML = '<p class="empty-state">No events match your filters</p>';
@@ -126,9 +181,8 @@
               ${isRead ? '<span class="badge-read">READ</span>' : ''}
             </h2>
             <div class="meta">
-              <span class="date">${escapeHtml(item.pubDate)}</span>
+              ${item.deadline ? `<span class="deadline">📅 ${escapeHtml(item.deadline)}</span>` : ''}
             </div>
-            <div class="desc">${item.description}</div>
             <div class="item-actions">
               <button class="link-button mark-read" data-guid="${item.guid}">
                 ${isRead ? '✓ Read' : 'Mark as read'}
@@ -227,10 +281,34 @@
           .replace(/'/g, '&#39;');
       }
 
+      function parseDeadlineDate(deadlineStr) {
+        if (!deadlineStr) return null;
+        
+        // Try to parse various date formats
+        // Format: "31 Dec 2026 23:59", "1 Dec 2025 23:59", etc.
+        const match = deadlineStr.match(/(\d+)\s+(\w+)\s+(\d{4})/);
+        if (match) {
+          const [, day, month, year] = match;
+          const monthMap = {
+            'Jan': 0, 'Feb': 1, 'Mar': 2, 'Apr': 3, 'May': 4, 'Jun': 5,
+            'Jul': 6, 'Aug': 7, 'Sep': 8, 'Oct': 9, 'Nov': 10, 'Dec': 11
+          };
+          if (monthMap.hasOwnProperty(month)) {
+            return new Date(parseInt(year), monthMap[month], parseInt(day));
+          }
+        }
+        
+        // Fallback: try to parse as-is
+        const parsed = new Date(deadlineStr);
+        return isNaN(parsed.getTime()) ? null : parsed;
+      }
+
       // Event listeners
       document.getElementById('searchBox').addEventListener('input', renderItems);
       document.getElementById('showNewOnly').addEventListener('change', renderItems);
       document.getElementById('hideRead').addEventListener('change', renderItems);
+      document.getElementById('showUpcoming').addEventListener('change', renderItems);
+      document.getElementById('sortBy').addEventListener('change', renderItems);
       
       document.getElementById('markAllRead').addEventListener('click', () => {
         allItems.forEach(item => readItems.add(item.guid));
