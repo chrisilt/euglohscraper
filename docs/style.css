@@ -1,16 +1,20 @@
 :root{
-  --accent:#2b8cff;
+  --accent:#2563eb;
+  --accent-hover:#1d4ed8;
   --bg:#0f1720;
   --card:#0b1220;
-  --muted:#9aa4b2;
+  --muted:#64748b;
+  --new-badge-bg:#059669;
+  --new-badge-text:#ffffff;
 }
 body{
   font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
   line-height:1.5;
   margin:0;
-  /* use a clean, high-contrast background — remove noisy gradient */
-  background: #f6f8fa;
-  color: #0b1220;
+  /* Professional gradient background with good contrast */
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #f8fafc 100%);
+  min-height: 100vh;
+  color: #0f172a;
   -webkit-font-smoothing:antialiased;
   -moz-osx-font-smoothing:grayscale;
 }
@@ -18,28 +22,41 @@ body{
   max-width:920px;
   margin:28px auto;
   padding:22px;
-  background: #ffffff; /* white content area for best readability */
-  border-radius:10px;
-  box-shadow: 0 6px 18px rgba(18, 38, 63, 0.06);
+  background: rgba(255, 255, 255, 0.95); /* slightly transparent white for better gradient visibility */
+  border-radius:12px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08), 0 4px 8px rgba(15, 23, 42, 0.04);
+  backdrop-filter: blur(10px);
 }
 header{display:flex;flex-direction:column;gap:8px}
 .lead{color:var(--muted)}
 .actions{margin-top:6px}
-.button{display:inline-block;padding:8px 12px;background:var(--accent);color:white;border-radius:6px;text-decoration:none}
+.button{display:inline-block;padding:8px 16px;background:var(--accent);color:white;border-radius:6px;text-decoration:none;transition:background 0.2s ease;font-weight:500}
+.button:hover{background:var(--accent-hover)}
 .muted{color:var(--muted);margin-left:12px;text-decoration:none}
 .items{display:flex;flex-direction:column;gap:14px;margin-top:20px}
-.item{padding:16px;border-radius:10px;background:#ffffff;border:1px solid #e9eef6}
-.item-title{font-size:1.1rem;margin:0}
-.item-title a{text-decoration:none;color:var(--accent)}
+.item{padding:18px;border-radius:10px;background:#ffffff;border:1px solid #e2e8f0;transition:box-shadow 0.2s ease, border-color 0.2s ease}
+.item:hover{box-shadow:0 4px 12px rgba(15, 23, 42, 0.08);border-color:#cbd5e1}
+.item-title{font-size:1.1rem;margin:0;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.item-title a{text-decoration:none;color:var(--accent);transition:color 0.2s ease}
+.item-title a:hover{color:var(--accent-hover)}
+.badge-new{display:inline-flex;align-items:center;padding:3px 10px;background:var(--new-badge-bg);color:var(--new-badge-text);font-size:0.75rem;font-weight:700;border-radius:12px;text-transform:uppercase;letter-spacing:0.5px;animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.7}}
 .meta{color:var(--muted);font-size:0.92rem;margin-top:6px}
-.desc{margin-top:10px;color:#222;line-height:1.45}
+.desc{margin-top:10px;color:#334155;line-height:1.45}
 .loading,.error{color:var(--muted)}
 footer{margin-top:28px;color:var(--muted);font-size:0.9rem}
 
 @media (prefers-color-scheme:dark){
-  body{background:#071021;color:#e6eefb}
-  .wrap{background:#07151f;box-shadow: 0 6px 18px rgba(0,0,0,0.6)}
-  .item{background:#071428;border-color:#12314a}
-  .muted{color:#98a9be}
-  .item-title a{color:#6fb7ff}
+  body{
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+    color:#e2e8f0
+  }
+  .wrap{background:rgba(15, 23, 42, 0.95);box-shadow: 0 8px 24px rgba(0,0,0,0.4), 0 4px 8px rgba(0,0,0,0.2)}
+  .item{background:#1e293b;border-color:#334155}
+  .item:hover{box-shadow:0 4px 12px rgba(0,0,0,0.3);border-color:#475569}
+  .muted{color:#94a3b8}
+  .item-title a{color:#60a5fa}
+  .item-title a:hover{color:#93c5fd}
+  .desc{color:#cbd5e1}
+  .badge-new{background:#059669;color:#ffffff}
 }
