@@ -344,7 +344,7 @@ def send_teams_notification(ev: Dict):
 def append_to_feed(feed_file: str, new_events: List[Dict]):
     """
     Prepend new items to feed_file so newest items are at the top.
-    Uses a minimal RSS 2.0 structure.
+    Uses an enhanced RSS 2.0 structure with richer metadata.
     """
     from xml.sax.saxutils import escape
 
@@ -356,41 +356,75 @@ def append_to_feed(feed_file: str, new_events: List[Dict]):
         link = escape(ev.get("link") or "")
         desc = escape(ev.get("description") or "")
         pubdate = escape(ev.get("date") or now)
+        
+        # Enhanced item with more metadata
         items_xml += f"""  <item>
     <title>{title}</title>
     <link>{link}</link>
-    <description>{desc}</description>
+    <description><![CDATA[{desc}]]></description>
     <pubDate>{pubdate}</pubDate>
     <guid isPermaLink="false">{escape(ev["id"])}</guid>
+    <category>EUGLOH Event</category>
     <category>new</category>
+    <source url="{escape(TARGET_URL)}">EUGLOH Course Watcher</source>
   </item>\n"""
 
     if os.path.exists(feed_file):
         with open(feed_file, "r", encoding="utf-8") as f:
             existing = f.read()
-        # naive prepend after <channel> line
+        # naive prepend after <channel> line but preserve channel metadata
         insert_after = existing.find("<channel>")
         if insert_after != -1:
-            after_idx = existing.find("\n", insert_after)
-            if after_idx != -1:
-                new_feed = existing[:after_idx+1] + items_xml + existing[after_idx+1:]
+            # Find where the first <item> starts or where to insert
+            first_item = existing.find("<item>")
+            if first_item != -1:
+                new_feed = existing[:first_item] + items_xml + existing[first_item:]
             else:
-                new_feed = items_xml + existing
+                # No items yet, insert before </channel>
+                close_channel = existing.find("</channel>")
+                if close_channel != -1:
+                    new_feed = existing[:close_channel] + items_xml + existing[close_channel:]
+                else:
+                    after_idx = existing.find("\n", insert_after)
+                    if after_idx != -1:
+                        new_feed = existing[:after_idx+1] + items_xml + existing[after_idx+1:]
+                    else:
+                        new_feed = items_xml + existing
         else:
-            new_feed = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<rss version=\"2.0\">\n<channel>\n"
-            new_feed += f"  <title>New events from {TARGET_URL}</title>\n  <link>{TARGET_URL}</link>\n  <description>Auto-generated feed of new events</description>\n"
-            new_feed += items_xml
-            new_feed += "</channel>\n</rss>"
+            new_feed = create_feed_header() + items_xml + "</channel>\n</rss>"
     else:
-        new_feed = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<rss version=\"2.0\">\n<channel>\n"
-        new_feed += f"  <title>New events from {TARGET_URL}</title>\n  <link>{TARGET_URL}</link>\n  <description>Auto-generated feed of new events</description>\n"
-        new_feed += items_xml
-        new_feed += "</channel>\n</rss>"
+        new_feed = create_feed_header() + items_xml + "</channel>\n</rss>"
 
     with open(feed_file + ".tmp", "w", encoding="utf-8") as f:
         f.write(new_feed)
     os.replace(feed_file + ".tmp", feed_file)
     print(f"Wrote feed to {feed_file}")
+
+def create_feed_header() -> str:
+    """Create enhanced RSS feed header with rich metadata."""
+    from xml.sax.saxutils import escape
+    now = time.strftime("%a, %d %b %Y %H:%M:%S +0000", time.gmtime())
+    
+    return f"""<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+  <title>EUGLOH Open Registrations Feed</title>
+  <link>{escape(TARGET_URL)}</link>
+  <description>Automated feed of newly discovered EUGLOH courses and events with open registrations. Stay updated with the latest educational opportunities from the European University Alliance for Global Health.</description>
+  <language>en</language>
+  <lastBuildDate>{now}</lastBuildDate>
+  <pubDate>{now}</pubDate>
+  <ttl>1440</ttl>
+  <generator>EUGLOH Course Watcher v2.0</generator>
+  <managingEditor>eugloh-watcher@example.com (EUGLOH Course Watcher)</managingEditor>
+  <webMaster>eugloh-watcher@example.com (EUGLOH Course Watcher)</webMaster>
+  <image>
+    <url>https://www.eugloh.eu/wp-content/uploads/2021/06/cropped-eugloh-logo-vertical-300x300.png</url>
+    <title>EUGLOH</title>
+    <link>{escape(TARGET_URL)}</link>
+  </image>
+  <atom:link href="https://chrisilt.github.io/euglohscraper/feed.xml" rel="self" type="application/rss+xml" />
+"""
 
 # ---- Main ----
 def main():

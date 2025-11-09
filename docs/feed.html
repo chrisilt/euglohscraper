@@ -3,15 +3,49 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>EUGLOH feed</title>
+    <title>EUGLOH Event Feed</title>
     <link rel="stylesheet" href="./style.css">
   </head>
   <body>
     <main class="wrap">
       <header>
-        <h1>EUGLOH — Open registrations</h1>
-        <p class="lead">Latest open registrations discovered by the scraper.</p>
-        <p class="actions"><a class="button" href="./feed.xml">Raw RSS</a></p>
+        <h1>EUGLOH — Open Registrations</h1>
+        <p class="lead">Latest open registrations discovered by the scraper. <span id="stats" class="stats-badge"></span></p>
+        
+        <!-- Search and Filter Controls -->
+        <div class="controls">
+          <input type="search" id="searchBox" placeholder="Search events..." class="search-input" />
+          <div class="filter-group">
+            <label class="filter-label">
+              <input type="checkbox" id="showNewOnly" />
+              <span>Show NEW only</span>
+            </label>
+            <label class="filter-label">
+              <input type="checkbox" id="hideRead" />
+              <span>Hide read</span>
+            </label>
+            <label class="filter-label">
+              <input type="checkbox" id="showUpcoming" />
+              <span>Upcoming deadlines only</span>
+            </label>
+          </div>
+          <div class="filter-group">
+            <label class="filter-label-select">
+              Sort by:
+              <select id="sortBy" class="sort-select">
+                <option value="default">Default order</option>
+                <option value="title">Title (A-Z)</option>
+                <option value="deadline">Deadline (earliest first)</option>
+              </select>
+            </label>
+          </div>
+        </div>
+        
+        <p class="actions">
+          <a class="button" href="./feed.xml">Raw RSS</a>
+          <button class="button secondary" id="markAllRead">Mark all as read</button>
+          <button class="button secondary" id="clearRead">Clear read status</button>
+        </p>
       </header>
 
       <section id="content">
@@ -19,11 +53,14 @@
       </section>
 
       <footer>
-        <small>Powered by <code>check_events.py</code></small>
+        <small>Powered by <code>check_events.py</code> | <a href="https://github.com/chrisilt/euglohscraper" target="_blank" rel="noopener">View on GitHub</a></small>
       </footer>
     </main>
 
     <script>
+      let allItems = [];
+      let readItems = new Set(JSON.parse(localStorage.getItem('readItems') || '[]'));
+
       async function loadFeed() {
         const content = document.getElementById('content');
         content.innerHTML = '<p class="loading">Fetching feed.xml…</p>';
@@ -37,32 +74,202 @@
             content.innerHTML = '<p>No items found in feed.xml</p>';
             return;
           }
-          const list = document.createElement('div');
-          list.className = 'items';
-          items.forEach(it => {
-            const title = it.querySelector('title')?.textContent || 'Untitled';
-            const link = it.querySelector('link')?.textContent || '#';
-            const pub = it.querySelector('pubDate')?.textContent || '';
-            const desc = it.querySelector('description')?.textContent || '';
-            const category = it.querySelector('category')?.textContent || '';
-            const isNew = category === 'new';
-            const node = document.createElement('article');
-            node.className = 'item';
-            node.innerHTML = `
-              <h2 class="item-title">
-                <a href="${link}" target="_blank" rel="noopener">${escapeHtml(title)}</a>
-                ${isNew ? '<span class="badge-new">NEW</span>' : ''}
-              </h2>
-              <div class="meta">${escapeHtml(pub)}</div>
-              <div class="desc">${desc}</div>
-            `;
-            list.appendChild(node);
+          
+          allItems = items.map(it => {
+            const rawDescription = it.querySelector('description')?.textContent || '';
+            // Clean up description: remove "Find out more and register now" and extract deadline
+            let cleanDesc = rawDescription.replace(/^Find out more and register now\s*/i, '');
+            let deadline = null;
+            const deadlineMatch = cleanDesc.match(/Deadline:\s*(.+?)(\s*$|(?=\n))/i);
+            if (deadlineMatch) {
+              deadline = deadlineMatch[1].trim();
+            }
+            
+            return {
+              title: it.querySelector('title')?.textContent || 'Untitled',
+              link: it.querySelector('link')?.textContent || '#',
+              pubDate: it.querySelector('pubDate')?.textContent || '',
+              description: rawDescription,
+              cleanDescription: cleanDesc,
+              deadline: deadline,
+              guid: it.querySelector('guid')?.textContent || '',
+              categories: Array.from(it.querySelectorAll('category')).map(c => c.textContent),
+              isNew: Array.from(it.querySelectorAll('category')).some(c => c.textContent === 'new'),
+              element: it
+            };
           });
-          content.innerHTML = '';
-          content.appendChild(list);
+          
+          renderItems();
+          updateStats();
         } catch (err) {
           content.innerHTML = `<p class="error">Failed to load feed.xml: ${err.message}</p>`;
         }
+      }
+
+      function renderItems() {
+        const content = document.getElementById('content');
+        const searchTerm = document.getElementById('searchBox').value.toLowerCase();
+        const showNewOnly = document.getElementById('showNewOnly').checked;
+        const hideRead = document.getElementById('hideRead').checked;
+        const showUpcoming = document.getElementById('showUpcoming').checked;
+        const sortBy = document.getElementById('sortBy').value;
+        
+        let filtered = allItems.filter(item => {
+          // Search filter
+          if (searchTerm && !item.title.toLowerCase().includes(searchTerm) && 
+              !item.description.toLowerCase().includes(searchTerm)) {
+            return false;
+          }
+          
+          // New only filter
+          if (showNewOnly && !item.isNew) {
+            return false;
+          }
+          
+          // Hide read filter
+          if (hideRead && readItems.has(item.guid)) {
+            return false;
+          }
+          
+          // Upcoming deadlines filter (show events with deadlines in the future or within 30 days)
+          if (showUpcoming && item.deadline) {
+            const deadlineDate = parseDeadlineDate(item.deadline);
+            if (deadlineDate) {
+              const now = new Date();
+              const daysUntil = Math.ceil((deadlineDate - now) / (1000 * 60 * 60 * 24));
+              if (daysUntil < 0 || daysUntil > 30) {
+                return false;
+              }
+            }
+          }
+          
+          return true;
+        });
+        
+        // Sort items
+        if (sortBy === 'title') {
+          filtered.sort((a, b) => a.title.localeCompare(b.title));
+        } else if (sortBy === 'deadline') {
+          filtered.sort((a, b) => {
+            const dateA = parseDeadlineDate(a.deadline);
+            const dateB = parseDeadlineDate(b.deadline);
+            if (!dateA && !dateB) return 0;
+            if (!dateA) return 1;
+            if (!dateB) return -1;
+            return dateA - dateB;
+          });
+        }
+        
+        if (filtered.length === 0) {
+          content.innerHTML = '<p class="empty-state">No events match your filters</p>';
+          return;
+        }
+        
+        const list = document.createElement('div');
+        list.className = 'items';
+        
+        filtered.forEach(item => {
+          const isRead = readItems.has(item.guid);
+          const node = document.createElement('article');
+          node.className = 'item' + (isRead ? ' read' : '');
+          node.dataset.guid = item.guid;
+          
+          node.innerHTML = `
+            <h2 class="item-title">
+              <a href="${item.link}" target="_blank" rel="noopener" data-guid="${item.guid}">${escapeHtml(item.title)}</a>
+              ${item.isNew ? '<span class="badge-new">NEW</span>' : ''}
+              ${isRead ? '<span class="badge-read">READ</span>' : ''}
+            </h2>
+            <div class="meta">
+              ${item.deadline ? `<span class="deadline">📅 ${escapeHtml(item.deadline)}</span>` : ''}
+            </div>
+            <div class="item-actions">
+              <button class="link-button mark-read" data-guid="${item.guid}">
+                ${isRead ? '✓ Read' : 'Mark as read'}
+              </button>
+              <button class="link-button share-button" data-title="${escapeHtml(item.title)}" data-url="${item.link}">
+                Share
+              </button>
+            </div>
+          `;
+          list.appendChild(node);
+        });
+        
+        content.innerHTML = '';
+        content.appendChild(list);
+        
+        // Add event listeners
+        document.querySelectorAll('.mark-read').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const guid = e.target.dataset.guid;
+            toggleRead(guid);
+          });
+        });
+        
+        document.querySelectorAll('.item-title a').forEach(link => {
+          link.addEventListener('click', (e) => {
+            const guid = e.target.dataset.guid;
+            markAsRead(guid);
+          });
+        });
+        
+        document.querySelectorAll('.share-button').forEach(btn => {
+          btn.addEventListener('click', async (e) => {
+            const title = e.target.dataset.title;
+            const url = e.target.dataset.url;
+            if (navigator.share) {
+              try {
+                await navigator.share({ title, url });
+              } catch (err) {
+                if (err.name !== 'AbortError') {
+                  fallbackShare(url);
+                }
+              }
+            } else {
+              fallbackShare(url);
+            }
+          });
+        });
+      }
+
+      function toggleRead(guid) {
+        if (readItems.has(guid)) {
+          readItems.delete(guid);
+        } else {
+          readItems.add(guid);
+        }
+        saveReadItems();
+        renderItems();
+        updateStats();
+      }
+
+      function markAsRead(guid) {
+        if (!readItems.has(guid)) {
+          readItems.add(guid);
+          saveReadItems();
+          renderItems();
+          updateStats();
+        }
+      }
+
+      function saveReadItems() {
+        localStorage.setItem('readItems', JSON.stringify([...readItems]));
+      }
+
+      function updateStats() {
+        const total = allItems.length;
+        const newCount = allItems.filter(item => item.isNew).length;
+        const unreadCount = allItems.filter(item => !readItems.has(item.guid)).length;
+        const statsEl = document.getElementById('stats');
+        statsEl.textContent = `${total} total • ${newCount} new • ${unreadCount} unread`;
+      }
+
+      function fallbackShare(url) {
+        navigator.clipboard.writeText(url).then(() => {
+          alert('Link copied to clipboard!');
+        }).catch(() => {
+          alert('Could not copy link. Please copy manually: ' + url);
+        });
       }
 
       function escapeHtml(s) {
@@ -74,6 +281,52 @@
           .replace(/'/g, '&#39;');
       }
 
+      function parseDeadlineDate(deadlineStr) {
+        if (!deadlineStr) return null;
+        
+        // Try to parse various date formats
+        // Format: "31 Dec 2026 23:59", "1 Dec 2025 23:59", etc.
+        const match = deadlineStr.match(/(\d+)\s+(\w+)\s+(\d{4})/);
+        if (match) {
+          const [, day, month, year] = match;
+          const monthMap = {
+            'Jan': 0, 'Feb': 1, 'Mar': 2, 'Apr': 3, 'May': 4, 'Jun': 5,
+            'Jul': 6, 'Aug': 7, 'Sep': 8, 'Oct': 9, 'Nov': 10, 'Dec': 11
+          };
+          if (monthMap.hasOwnProperty(month)) {
+            return new Date(parseInt(year), monthMap[month], parseInt(day));
+          }
+        }
+        
+        // Fallback: try to parse as-is
+        const parsed = new Date(deadlineStr);
+        return isNaN(parsed.getTime()) ? null : parsed;
+      }
+
+      // Event listeners
+      document.getElementById('searchBox').addEventListener('input', renderItems);
+      document.getElementById('showNewOnly').addEventListener('change', renderItems);
+      document.getElementById('hideRead').addEventListener('change', renderItems);
+      document.getElementById('showUpcoming').addEventListener('change', renderItems);
+      document.getElementById('sortBy').addEventListener('change', renderItems);
+      
+      document.getElementById('markAllRead').addEventListener('click', () => {
+        allItems.forEach(item => readItems.add(item.guid));
+        saveReadItems();
+        renderItems();
+        updateStats();
+      });
+      
+      document.getElementById('clearRead').addEventListener('click', () => {
+        if (confirm('Clear all read status?')) {
+          readItems.clear();
+          saveReadItems();
+          renderItems();
+          updateStats();
+        }
+      });
+
+      // Load feed on page load
       loadFeed();
     </script>
   </body>
