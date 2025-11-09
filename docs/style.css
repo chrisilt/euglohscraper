@@ -39,8 +39,8 @@ header {
   text-align: center;
   margin-bottom: 3rem;
   padding: 2rem 1rem;
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(10px);
+  background: transparent; /* removed background behind header text */
+  /* removed backdrop-filter to avoid translucent panel */
   border-radius: 1rem;
   box-shadow: var(--shadow-lg);
   animation: fadeInDown 0.6s ease-out;
@@ -150,9 +150,9 @@ h1 {
 .item {
   padding: 1.5rem;
   border-radius: 1rem;
-  background: var(--card-bg);
-  border: 1px solid var(--card-border);
-  box-shadow: var(--shadow-md);
+  background: transparent; /* removed card background */
+  border: none; /* removed border behind the text */
+  box-shadow: none; /* removed shadow so text sits on page background */
   transition: all 0.3s ease;
   animation: fadeInUp 0.4s ease-out backwards;
 }
@@ -165,6 +165,7 @@ h1 {
 
 .item:hover {
   transform: translateY(-4px);
+  /* keep subtle emphasis on hover without adding a background */
   box-shadow: var(--shadow-xl);
   border-color: var(--primary);
 }
@@ -264,7 +265,7 @@ footer {
 }
 
 code {
-  background: var(--bg-gradient-start);
+  background: transparent; /* removed block background behind inline code */
   padding: 0.2rem 0.4rem;
   border-radius: 0.25rem;
   font-size: 0.875em;
@@ -284,7 +285,7 @@ code {
   }
 
   header {
-    background: rgba(30, 41, 59, 0.8);
+    background: transparent; /* removed background in dark mode too */
   }
 
   h1 {
@@ -301,8 +302,8 @@ code {
   }
 
   .item {
-    background: var(--card-bg);
-    border-color: var(--card-border);
+    background: transparent; /* transparent cards in dark mode */
+    border-color: transparent;
   }
 
   .item:hover {
@@ -319,7 +320,7 @@ code {
   }
 
   code {
-    background: #334155;
+    background: transparent;
     color: #60a5fa;
   }
 
