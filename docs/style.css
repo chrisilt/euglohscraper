@@ -78,11 +78,60 @@ header{display:flex;flex-direction:column;gap:8px}
   user-select:none;
   font-size:0.95rem;
 }
+.filter-label .tooltip-wrapper{
+  position:relative;
+  display:inline-flex;
+  align-items:center;
+  margin-left:4px;
+}
 .filter-label .help-text{
-  font-size:0.85rem;
-  color:var(--muted);
+  font-size:1rem;
+  color:var(--accent);
   cursor:help;
-  margin-left:2px;
+  font-weight:700;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:20px;
+  height:20px;
+  border-radius:50%;
+  background:rgba(37, 99, 235, 0.1);
+  transition:all 0.2s ease;
+}
+.filter-label .help-text:hover{
+  background:rgba(37, 99, 235, 0.2);
+  transform:scale(1.1);
+}
+.filter-label .tooltip-text{
+  visibility:hidden;
+  opacity:0;
+  position:absolute;
+  bottom:calc(100% + 8px);
+  left:50%;
+  transform:translateX(-50%);
+  background:#1e293b;
+  color:#fff;
+  padding:8px 12px;
+  border-radius:6px;
+  font-size:0.85rem;
+  white-space:nowrap;
+  z-index:1000;
+  pointer-events:none;
+  transition:opacity 0.2s ease, visibility 0.2s ease;
+  box-shadow:0 4px 12px rgba(0,0,0,0.2);
+}
+.filter-label .tooltip-text::after{
+  content:'';
+  position:absolute;
+  top:100%;
+  left:50%;
+  transform:translateX(-50%);
+  border:6px solid transparent;
+  border-top-color:#1e293b;
+}
+.filter-label .tooltip-wrapper:hover .tooltip-text{
+  visibility:visible;
+  opacity:1;
 }
 .filter-label input[type="checkbox"]{
   width:18px;
@@ -124,6 +173,10 @@ header{display:flex;flex-direction:column;gap:8px}
 .item-title a:hover{color:var(--accent-hover)}
 .badge-new{display:inline-flex;align-items:center;padding:3px 10px;background:var(--new-badge-bg);color:var(--new-badge-text);font-size:0.75rem;font-weight:700;border-radius:12px;text-transform:uppercase;letter-spacing:0.5px;animation:pulse 2s ease-in-out infinite}
 .badge-read{display:inline-flex;align-items:center;padding:3px 10px;background:var(--read-badge-bg);color:var(--read-badge-text);font-size:0.75rem;font-weight:600;border-radius:12px;text-transform:uppercase;letter-spacing:0.5px}
+.badge-urgency{display:inline-flex;align-items:center;padding:3px 10px;font-size:0.75rem;font-weight:700;border-radius:12px;text-transform:uppercase;letter-spacing:0.5px}
+.badge-urgency.deadline-urgent{background:#dc2626;color:#ffffff;animation:pulse 2s ease-in-out infinite}
+.badge-urgency.deadline-soon{background:#f59e0b;color:#ffffff}
+.badge-urgency.deadline-expired{background:#6b7280;color:#ffffff;opacity:0.8}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.7}}
 .meta{color:var(--muted);font-size:0.92rem;margin-top:6px}
 .deadline{
@@ -135,6 +188,22 @@ header{display:flex;flex-direction:column;gap:8px}
   border-radius:6px;
   font-weight:600;
   color:var(--accent);
+  transition:all 0.3s ease;
+}
+.deadline.deadline-urgent{
+  background:rgba(220, 38, 38, 0.15);
+  color:#dc2626;
+  border:2px solid rgba(220, 38, 38, 0.3);
+}
+.deadline.deadline-soon{
+  background:rgba(245, 158, 11, 0.15);
+  color:#f59e0b;
+  border:2px solid rgba(245, 158, 11, 0.3);
+}
+.deadline.deadline-expired{
+  background:rgba(107, 114, 128, 0.15);
+  color:#6b7280;
+  opacity:0.7;
 }
 .desc{margin-top:10px;color:#334155;line-height:1.45}
 .item-actions{margin-top:12px;display:flex;gap:12px;flex-wrap:wrap}
@@ -152,6 +221,11 @@ footer a:hover{text-decoration:underline}
   .filter-group{flex-direction:column;gap:8px}
   .actions{flex-direction:column}
   .button{width:100%;text-align:center}
+  .filter-label .tooltip-text{
+    white-space:normal;
+    max-width:200px;
+    text-align:center;
+  }
 }
 
 @media (prefers-color-scheme:dark){
@@ -173,12 +247,32 @@ footer a:hover{text-decoration:underline}
   .item-title a{color:#60a5fa}
   .item-title a:hover{color:#93c5fd}
   .deadline{background:rgba(96, 165, 250, 0.15);color:#60a5fa}
+  .deadline.deadline-urgent{background:rgba(220, 38, 38, 0.2);color:#f87171;border-color:rgba(220, 38, 38, 0.4)}
+  .deadline.deadline-soon{background:rgba(245, 158, 11, 0.2);color:#fbbf24;border-color:rgba(245, 158, 11, 0.4)}
+  .deadline.deadline-expired{background:rgba(107, 114, 128, 0.2);color:#9ca3af;border-color:transparent}
   .desc{color:#cbd5e1}
   .badge-new{background:#059669;color:#ffffff}
   .badge-read{background:#475569;color:#e2e8f0}
+  .badge-urgency.deadline-urgent{background:#dc2626;color:#ffffff}
+  .badge-urgency.deadline-soon{background:#f59e0b;color:#ffffff}
+  .badge-urgency.deadline-expired{background:#6b7280;color:#e2e8f0}
   .button.secondary{background:#1e293b;color:#60a5fa;border-color:#60a5fa}
   .button.secondary:hover{background:#334155}
   .link-button{color:#60a5fa}
   .link-button:hover{color:#93c5fd}
   footer a{color:#60a5fa}
+  .filter-label .help-text{
+    color:#60a5fa;
+    background:rgba(96, 165, 250, 0.15);
+  }
+  .filter-label .help-text:hover{
+    background:rgba(96, 165, 250, 0.25);
+  }
+  .filter-label .tooltip-text{
+    background:#334155;
+    color:#e2e8f0;
+  }
+  .filter-label .tooltip-text::after{
+    border-top-color:#334155;
+  }
 }

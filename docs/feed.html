@@ -27,7 +27,10 @@
             <label class="filter-label">
               <input type="checkbox" id="showUpcoming" />
               <span>Upcoming deadlines only</span>
-              <span class="help-text" title="Shows events with deadlines within the next 30 days">ⓘ</span>
+              <span class="tooltip-wrapper">
+                <span class="help-text">ⓘ</span>
+                <span class="tooltip-text">Shows events with deadlines within the next 30 days</span>
+              </span>
             </label>
           </div>
           <div class="filter-group">
@@ -175,14 +178,36 @@
           node.className = 'item' + (isRead ? ' read' : '');
           node.dataset.guid = item.guid;
           
+          // Calculate deadline urgency
+          let deadlineClass = '';
+          let deadlineLabel = '';
+          if (item.deadline) {
+            const deadlineDate = parseDeadlineDate(item.deadline);
+            if (deadlineDate) {
+              const now = new Date();
+              const daysUntil = Math.ceil((deadlineDate - now) / (1000 * 60 * 60 * 24));
+              if (daysUntil < 0) {
+                deadlineClass = 'deadline-expired';
+                deadlineLabel = '⚠️ EXPIRED';
+              } else if (daysUntil <= 3) {
+                deadlineClass = 'deadline-urgent';
+                deadlineLabel = '🔥 URGENT';
+              } else if (daysUntil <= 7) {
+                deadlineClass = 'deadline-soon';
+                deadlineLabel = '⏰ SOON';
+              }
+            }
+          }
+          
           node.innerHTML = `
             <h2 class="item-title">
               <a href="${item.link}" target="_blank" rel="noopener" data-guid="${item.guid}">${escapeHtml(item.title)}</a>
               ${item.isNew ? '<span class="badge-new">NEW</span>' : ''}
               ${isRead ? '<span class="badge-read">READ</span>' : ''}
+              ${deadlineLabel ? `<span class="badge-urgency ${deadlineClass}">${deadlineLabel}</span>` : ''}
             </h2>
             <div class="meta">
-              ${item.deadline ? `<span class="deadline">📅 ${escapeHtml(item.deadline)}</span>` : ''}
+              ${item.deadline ? `<span class="deadline ${deadlineClass}">📅 ${escapeHtml(item.deadline)}</span>` : ''}
             </div>
             <div class="item-actions">
               <button class="link-button mark-read" data-guid="${item.guid}">
