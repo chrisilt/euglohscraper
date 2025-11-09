@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>EUGLOH feed</title>
+    <link rel="stylesheet" href="/euglohscraper/docs/style.css">
+  </head>
+  <body>
+    <main class="wrap">
+      <header>
+        <h1>EUGLOH — Open registrations</h1>
+        <p class="lead">Latest open registrations discovered by the scraper.</p>
+        <p class="actions"><a class="button" href="./feed.xml">Raw RSS</a> <a class="muted" href="../">Home</a></p>
+      </header>
+
+      <section id="content">
+        <p class="loading">Loading feed…</p>
+      </section>
+
+      <footer>
+        <small>Powered by <code>check_events.py</code></small>
+      </footer>
+    </main>
+
+    <script>
+      async function loadFeed() {
+        const content = document.getElementById('content');
+        content.innerHTML = '<p class="loading">Fetching feed.xml…</p>';
+        try {
+          const resp = await fetch('./feed.xml');
+          if (!resp.ok) throw new Error('HTTP '+resp.status);
+          const text = await resp.text();
+          const doc = new DOMParser().parseFromString(text, 'application/xml');
+          const items = Array.from(doc.querySelectorAll('item'));
+          if (!items.length) {
+            content.innerHTML = '<p>No items found in feed.xml</p>';
+            return;
+          }
+          const list = document.createElement('div');
+          list.className = 'items';
+          items.forEach(it => {
+            const title = it.querySelector('title')?.textContent || 'Untitled';
+            const link = it.querySelector('link')?.textContent || '#';
+            const pub = it.querySelector('pubDate')?.textContent || '';
+            const desc = it.querySelector('description')?.textContent || '';
+            const node = document.createElement('article');
+            node.className = 'item';
+            node.innerHTML = `
+              <h2 class="item-title"><a href="${link}" target="_blank" rel="noopener">${escapeHtml(title)}</a></h2>
+              <div class="meta">${escapeHtml(pub)}</div>
+              <div class="desc">${desc}</div>
+            `;
+            list.appendChild(node);
+          });
+          content.innerHTML = '';
+          content.appendChild(list);
+        } catch (err) {
+          content.innerHTML = `<p class="error">Failed to load feed.xml: ${err.message}</p>`;
+        }
+      }
+
+      function escapeHtml(s) {
+        return String(s)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+
+      loadFeed();
+    </script>
+  </body>
+</html>
