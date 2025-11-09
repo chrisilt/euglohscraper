@@ -1,16 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
-<rss version="2.0">
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
 <channel>
-  <title>New events from https://www.eugloh.eu/courses-trainings/?openRegistrations=%5Byes%5D</title>
+  <title>EUGLOH Open Registrations Feed</title>
   <link>https://www.eugloh.eu/courses-trainings/?openRegistrations=%5Byes%5D</link>
-  <description>Auto-generated feed of new events</description>
+  <description>Automated feed of newly discovered EUGLOH courses and events with open registrations. Stay updated with the latest educational opportunities from the European University Alliance for Global Health.</description>
+  <language>en</language>
+  <lastBuildDate>Sat, 09 Nov 2025 19:52:00 +0000</lastBuildDate>
+  <pubDate>Sat, 09 Nov 2025 19:52:00 +0000</pubDate>
+  <ttl>1440</ttl>
+  <generator>EUGLOH Course Watcher v2.0</generator>
+  <managingEditor>eugloh-watcher@example.com (EUGLOH Course Watcher)</managingEditor>
+  <webMaster>eugloh-watcher@example.com (EUGLOH Course Watcher)</webMaster>
+  <image>
+    <url>https://www.eugloh.eu/wp-content/uploads/2021/06/cropped-eugloh-logo-vertical-300x300.png</url>
+    <title>EUGLOH</title>
+    <link>https://www.eugloh.eu/courses-trainings/?openRegistrations=%5Byes%5D</link>
+  </image>
+  <atom:link href="https://chrisilt.github.io/euglohscraper/feed.xml" rel="self" type="application/rss+xml" />
   <item>
     <title>EUGLOH International Certificate</title>
     <link>https://intranet.eugloh.eu/application/form/EUG2_T2_1_0060</link>
     <description>Find out more and register nowDeadline: 31 Dec 2026 23:59</description>
     <pubDate>Sun, 09 Nov 2025 15:32:10 +0000</pubDate>
     <guid isPermaLink="false">https://intranet.eugloh.eu/application/form/EUG2_T2_1_0060</guid>
+    <category>EUGLOH Event</category>
     <category>new</category>
+    <source url="https://www.eugloh.eu/courses-trainings/?openRegistrations=%5Byes%5D">EUGLOH Course Watcher</source>
   </item>
   <item>
     <title>EUGLOH Certificate of Advanced Studies in Global Health 2026</title>
@@ -18,7 +33,9 @@
     <description>Find out more and register nowDeadline: 31 Jan 2026 23:59</description>
     <pubDate>Sun, 09 Nov 2025 15:32:10 +0000</pubDate>
     <guid isPermaLink="false">https://intranet.eugloh.eu/application/form/EUG2_T2_1_0129</guid>
+    <category>EUGLOH Event</category>
     <category>new</category>
+    <source url="https://www.eugloh.eu/courses-trainings/?openRegistrations=%5Byes%5D">EUGLOH Course Watcher</source>
   </item>
   <item>
     <title>Call for Speakers: EUGLOH Conference on Pedagogical Development</title>
@@ -26,6 +43,8 @@
     <description>Find out more and register nowDeadline: 11 Jan 2026 23:59</description>
     <pubDate>Sun, 09 Nov 2025 15:32:10 +0000</pubDate>
     <guid isPermaLink="false">https://intranet.eugloh.eu/events/call-for-speakers-eugloh-conference-on-pedagogical-development</guid>
+      <category>EUGLOH Event</category>
+    <source url="https://www.eugloh.eu/courses-trainings/?openRegistrations=%5Byes%5D">EUGLOH Course Watcher</source>
   </item>
   <item>
     <title>ABC Learning Design in EUGLOH 2nd Edition</title>
@@ -33,6 +52,8 @@
     <description>Find out more and register nowDeadline:  5 Jan 2026 23:59</description>
     <pubDate>Sun, 09 Nov 2025 15:32:10 +0000</pubDate>
     <guid isPermaLink="false">https://intranet.eugloh.eu/application/form/EUG2_T2_2_0141</guid>
+      <category>EUGLOH Event</category>
+    <source url="https://www.eugloh.eu/courses-trainings/?openRegistrations=%5Byes%5D">EUGLOH Course Watcher</source>
   </item>
   <item>
     <title>Introduction to Outbreak Investigation – Infection Prevention and Control Measures 2026</title>
@@ -40,6 +61,8 @@
     <description>Find out more and register nowDeadline:  8 Dec 2025 23:59</description>
     <pubDate>Sun, 09 Nov 2025 15:32:10 +0000</pubDate>
     <guid isPermaLink="false">https://intranet.eugloh.eu/application/form/EUG2_T2_1_0128</guid>
+      <category>EUGLOH Event</category>
+    <source url="https://www.eugloh.eu/courses-trainings/?openRegistrations=%5Byes%5D">EUGLOH Course Watcher</source>
   </item>
   <item>
     <title>Emotional Intelligence &amp; Resilience | EUGLOH Soft Skills Seminar Series (Oct–Dec 2025 Edition)</title>
@@ -47,6 +70,8 @@
     <description>Find out more and register nowDeadline:  2 Dec 2025 23:59</description>
     <pubDate>Sun, 09 Nov 2025 15:32:10 +0000</pubDate>
     <guid isPermaLink="false">https://intranet.eugloh.eu/events/emotional-intelligence-resilience-eugloh-soft-skills-seminar-series-oct-dec-2025-edition</guid>
+      <category>EUGLOH Event</category>
+    <source url="https://www.eugloh.eu/courses-trainings/?openRegistrations=%5Byes%5D">EUGLOH Course Watcher</source>
   </item>
   <item>
     <title>Biotechnology in Defence and Security</title>
@@ -54,6 +79,8 @@
     <description>Find out more and register nowDeadline:  1 Dec 2025 23:59</description>
     <pubDate>Sun, 09 Nov 2025 15:32:10 +0000</pubDate>
     <guid isPermaLink="false">https://intranet.eugloh.eu/application/form/EUG2_T2_1_0135</guid>
+      <category>EUGLOH Event</category>
+    <source url="https://www.eugloh.eu/courses-trainings/?openRegistrations=%5Byes%5D">EUGLOH Course Watcher</source>
   </item>
   <item>
     <title>An introduction to Software-Defined Networking</title>
@@ -61,6 +88,8 @@
     <description>Find out more and register nowDeadline:  1 Dec 2025 23:59</description>
     <pubDate>Sun, 09 Nov 2025 15:32:10 +0000</pubDate>
     <guid isPermaLink="false">https://intranet.eugloh.eu/application/form/EUG2_T2_1_0113</guid>
+      <category>EUGLOH Event</category>
+    <source url="https://www.eugloh.eu/courses-trainings/?openRegistrations=%5Byes%5D">EUGLOH Course Watcher</source>
   </item>
   <item>
     <title>Spotlight on Education: Why Educational Films Matter</title>
@@ -68,6 +97,8 @@
     <description>Find out more and register nowDeadline:  1 Dec 2025 08:00</description>
     <pubDate>Sun, 09 Nov 2025 15:32:10 +0000</pubDate>
     <guid isPermaLink="false">https://intranet.eugloh.eu/events/spotlight-on-education-why-educational-films-matter</guid>
+      <category>EUGLOH Event</category>
+    <source url="https://www.eugloh.eu/courses-trainings/?openRegistrations=%5Byes%5D">EUGLOH Course Watcher</source>
   </item>
   <item>
     <title>EUGLOH Living Lab - Data and Decision-Making</title>
@@ -75,6 +106,8 @@
     <description>Find out more and register nowDeadline: 30 Nov 2025 23:59</description>
     <pubDate>Sun, 09 Nov 2025 15:32:10 +0000</pubDate>
     <guid isPermaLink="false">https://intranet.eugloh.eu/application/form/EUG2_T4_3_0143</guid>
+      <category>EUGLOH Event</category>
+    <source url="https://www.eugloh.eu/courses-trainings/?openRegistrations=%5Byes%5D">EUGLOH Course Watcher</source>
   </item>
   <item>
     <title>EUGLOH LIVING LAB ‒ Making an Impact! Skills for Career Paths in and beyond Academia</title>
@@ -82,6 +115,8 @@
     <description>Find out more and register nowDeadline: 30 Nov 2025 23:59</description>
     <pubDate>Sun, 09 Nov 2025 15:32:10 +0000</pubDate>
     <guid isPermaLink="false">https://intranet.eugloh.eu/application/form/EUG2_T4_2_0140</guid>
+      <category>EUGLOH Event</category>
+    <source url="https://www.eugloh.eu/courses-trainings/?openRegistrations=%5Byes%5D">EUGLOH Course Watcher</source>
   </item>
   <item>
     <title>Empowering Education Through Peer Learning</title>
@@ -89,6 +124,8 @@
     <description>Find out more and register nowDeadline: 26 Nov 2025 12:00</description>
     <pubDate>Sun, 09 Nov 2025 15:32:10 +0000</pubDate>
     <guid isPermaLink="false">https://intranet.eugloh.eu/events/empowering-education-through-peer-learning</guid>
+      <category>EUGLOH Event</category>
+    <source url="https://www.eugloh.eu/courses-trainings/?openRegistrations=%5Byes%5D">EUGLOH Course Watcher</source>
   </item>
   <item>
     <title>EUGLOH Soft Skills Seminar Series - Teamwork and collaboration</title>
@@ -96,6 +133,8 @@
     <description>Find out more and register nowDeadline: 25 Nov 2025 23:59</description>
     <pubDate>Sun, 09 Nov 2025 15:32:10 +0000</pubDate>
     <guid isPermaLink="false">https://intranet.eugloh.eu/events/eugloh-soft-skills-seminar-series-teamwork-and-collaboration</guid>
+      <category>EUGLOH Event</category>
+    <source url="https://www.eugloh.eu/courses-trainings/?openRegistrations=%5Byes%5D">EUGLOH Course Watcher</source>
   </item>
   <item>
     <title>EUGLOH UniTes! Webinar Series on Gender Equality and Gender-Based Violence (2nd Edition)</title>
@@ -103,6 +142,8 @@
     <description>Find out more and register nowDeadline: 25 Nov 2025</description>
     <pubDate>Sun, 09 Nov 2025 15:32:10 +0000</pubDate>
     <guid isPermaLink="false">https://intranet.eugloh.eu/events/eugloh-unites-webinar-series-on-gender-equality-and-gender-based-violence-2nd-edition</guid>
+      <category>EUGLOH Event</category>
+    <source url="https://www.eugloh.eu/courses-trainings/?openRegistrations=%5Byes%5D">EUGLOH Course Watcher</source>
   </item>
   <item>
     <title>Bridging Cultures, Building Capacity: Call for Experts to Develop a Train-the-Trainer Manuel on Culturally Sensitive Outreach for Underserved Communities</title>
@@ -110,6 +151,8 @@
     <description>Find out more and register nowDeadline: 21 Nov 2025 23:59</description>
     <pubDate>Sun, 09 Nov 2025 15:32:10 +0000</pubDate>
     <guid isPermaLink="false">https://intranet.eugloh.eu/application/form/EUG2_T6_3_0138</guid>
+      <category>EUGLOH Event</category>
+    <source url="https://www.eugloh.eu/courses-trainings/?openRegistrations=%5Byes%5D">EUGLOH Course Watcher</source>
   </item>
   <item>
     <title>EUGLOH Campus Life Virtual Fair: Discover Université Paris-Saclay</title>
@@ -117,6 +160,8 @@
     <description>Find out more and register nowDeadline: 19 Nov 2025</description>
     <pubDate>Sun, 09 Nov 2025 15:32:10 +0000</pubDate>
     <guid isPermaLink="false">https://intranet.eugloh.eu/events/eugloh-campus-life-virtual-fair-discover-universite-paris-saclay</guid>
+      <category>EUGLOH Event</category>
+    <source url="https://www.eugloh.eu/courses-trainings/?openRegistrations=%5Byes%5D">EUGLOH Course Watcher</source>
   </item>
   <item>
     <title>EUGLOH Certificate of Advanced Studies in Global Health 2026 - First Information Session</title>
@@ -124,6 +169,8 @@
     <description>Find out more and register nowDeadline: 18 Nov 2025</description>
     <pubDate>Sun, 09 Nov 2025 15:32:10 +0000</pubDate>
     <guid isPermaLink="false">https://intranet.eugloh.eu/events/eugloh-certificate-of-advanced-studies-in-global-health-2026-first-information-session</guid>
+      <category>EUGLOH Event</category>
+    <source url="https://www.eugloh.eu/courses-trainings/?openRegistrations=%5Byes%5D">EUGLOH Course Watcher</source>
   </item>
   <item>
     <title>Sharing Care, Shaping Futures - Nursing in Europe</title>
@@ -131,6 +178,8 @@
     <description>Find out more and register nowDeadline: 15 Nov 2025 23:59</description>
     <pubDate>Sun, 09 Nov 2025 15:32:10 +0000</pubDate>
     <guid isPermaLink="false">https://intranet.eugloh.eu/application/form/EUG2_T2_1_0137</guid>
+      <category>EUGLOH Event</category>
+    <source url="https://www.eugloh.eu/courses-trainings/?openRegistrations=%5Byes%5D">EUGLOH Course Watcher</source>
   </item>
   <item>
     <title>From Food to Health</title>
@@ -138,6 +187,8 @@
     <description>Find out more and register nowDeadline: 14 Nov 2025 23:59</description>
     <pubDate>Sun, 09 Nov 2025 15:32:10 +0000</pubDate>
     <guid isPermaLink="false">https://intranet.eugloh.eu/application/form/EUG2_T3_1_0136</guid>
+      <category>EUGLOH Event</category>
+    <source url="https://www.eugloh.eu/courses-trainings/?openRegistrations=%5Byes%5D">EUGLOH Course Watcher</source>
   </item>
   <item>
     <title>Digital Twins in Supply Chain Logistics: Practical Applications through Simulators - 2nd edition</title>
@@ -145,6 +196,8 @@
     <description>Find out more and register nowDeadline: 14 Nov 2025 23:59</description>
     <pubDate>Sun, 09 Nov 2025 15:32:10 +0000</pubDate>
     <guid isPermaLink="false">https://intranet.eugloh.eu/application/form/EUG2_T2_1_0124</guid>
+      <category>EUGLOH Event</category>
+    <source url="https://www.eugloh.eu/courses-trainings/?openRegistrations=%5Byes%5D">EUGLOH Course Watcher</source>
   </item>
   <item>
     <title>Effective Communication in the Workplace | EUGLOH Soft Skills Seminar Series (Oct–Dec 2025 Edition)</title>
@@ -152,6 +205,8 @@
     <description>Find out more and register nowDeadline: 11 Nov 2025 23:59</description>
     <pubDate>Sun, 09 Nov 2025 15:32:10 +0000</pubDate>
     <guid isPermaLink="false">https://intranet.eugloh.eu/events/effective-communication-in-the-workplace-eugloh-soft-skills-seminar-series-oct-dec-2025-edition</guid>
+      <category>EUGLOH Event</category>
+    <source url="https://www.eugloh.eu/courses-trainings/?openRegistrations=%5Byes%5D">EUGLOH Course Watcher</source>
   </item>
   <item>
     <title>EUGLOH Workshop on Physical Activity, Health, and Well-Being</title>
@@ -159,6 +214,8 @@
     <description>Find out more and register nowDeadline:  9 Nov 2025 23:59</description>
     <pubDate>Sun, 09 Nov 2025 15:32:10 +0000</pubDate>
     <guid isPermaLink="false">https://intranet.eugloh.eu/application/form/EUG2_T5_4_0139</guid>
+      <category>EUGLOH Event</category>
+    <source url="https://www.eugloh.eu/courses-trainings/?openRegistrations=%5Byes%5D">EUGLOH Course Watcher</source>
   </item>
 </channel>
 </rss>
