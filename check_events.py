@@ -15,7 +15,10 @@ Configuration (via environment variables):
 - DATE_SELECTOR (default "time, .date")
 - STATE_FILE (default "./seen.json")
 - FEED_FILE (default "./feed.xml")
-- WEBHOOK_URL (optional)
+- WEBHOOK_URL (optional - generic webhook)
+- EMAIL_ENABLED (set to "true" to enable email notifications)
+- EMAIL_FROM, EMAIL_TO, EMAIL_SMTP_HOST, EMAIL_SMTP_PORT, EMAIL_SMTP_USER, EMAIL_SMTP_PASSWORD
+- TEAMS_WEBHOOK_URL (optional - Microsoft Teams webhook)
 - USER_AGENT, REQUEST_TIMEOUT
 
 Notes:
@@ -27,6 +30,9 @@ from __future__ import annotations
 import os
 import json
 import time
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from typing import List, Dict, Optional
 from urllib.parse import urljoin, urlparse, urlunparse
 import requests
@@ -51,6 +57,18 @@ FEED_FILE = os.environ.get("FEED_FILE", "./feed.xml")
 WEBHOOK_URL = os.environ.get("WEBHOOK_URL")  # optional: Zapier/Make webhook
 USER_AGENT = os.environ.get("USER_AGENT", "eugloh-event-checker/1.0")
 REQUEST_TIMEOUT = int(os.environ.get("REQUEST_TIMEOUT", "15"))
+
+# Email notification configuration
+EMAIL_ENABLED = os.environ.get("EMAIL_ENABLED", "").lower() == "true"
+EMAIL_FROM = os.environ.get("EMAIL_FROM", "")
+EMAIL_TO = os.environ.get("EMAIL_TO", "")
+EMAIL_SMTP_HOST = os.environ.get("EMAIL_SMTP_HOST", "")
+EMAIL_SMTP_PORT = int(os.environ.get("EMAIL_SMTP_PORT", "587"))
+EMAIL_SMTP_USER = os.environ.get("EMAIL_SMTP_USER", "")
+EMAIL_SMTP_PASSWORD = os.environ.get("EMAIL_SMTP_PASSWORD", "")
+
+# Microsoft Teams webhook configuration
+TEAMS_WEBHOOK_URL = os.environ.get("TEAMS_WEBHOOK_URL", "")
 
 # ---- Helpers ----
 def load_state(path: str) -> Dict:
@@ -212,6 +230,109 @@ def post_to_webhook(ev: Dict):
     except Exception as e:
         print("Failed to post webhook:", e)
 
+def send_email_notification(ev: Dict):
+    """Send email notification for a new event."""
+    if not EMAIL_ENABLED or not all([EMAIL_FROM, EMAIL_TO, EMAIL_SMTP_HOST, EMAIL_SMTP_USER, EMAIL_SMTP_PASSWORD]):
+        return
+    
+    try:
+        # Create message
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = f"New EUGLOH Event: {ev.get('title', 'Untitled')}"
+        msg['From'] = EMAIL_FROM
+        msg['To'] = EMAIL_TO
+        
+        # Create plain text and HTML versions
+        text_content = f"""
+New EUGLOH Event Detected!
+
+Title: {ev.get('title', 'N/A')}
+Date: {ev.get('date', 'N/A')}
+Link: {ev.get('link', 'N/A')}
+
+Description: {ev.get('description', 'N/A')}
+
+---
+This is an automated notification from the EUGLOH Course Watcher.
+"""
+        
+        html_content = f"""
+<html>
+  <head></head>
+  <body>
+    <h2>New EUGLOH Event Detected!</h2>
+    <p><strong>Title:</strong> {ev.get('title', 'N/A')}</p>
+    <p><strong>Date:</strong> {ev.get('date', 'N/A')}</p>
+    <p><strong>Link:</strong> <a href="{ev.get('link', '#')}">{ev.get('link', 'N/A')}</a></p>
+    <p><strong>Description:</strong> {ev.get('description', 'N/A')}</p>
+    <hr>
+    <p><em>This is an automated notification from the EUGLOH Course Watcher.</em></p>
+  </body>
+</html>
+"""
+        
+        # Attach both versions
+        part1 = MIMEText(text_content, 'plain')
+        part2 = MIMEText(html_content, 'html')
+        msg.attach(part1)
+        msg.attach(part2)
+        
+        # Send email
+        with smtplib.SMTP(EMAIL_SMTP_HOST, EMAIL_SMTP_PORT) as server:
+            server.starttls()
+            server.login(EMAIL_SMTP_USER, EMAIL_SMTP_PASSWORD)
+            server.send_message(msg)
+        
+        print(f"Email sent for event: {ev['id']}")
+    except Exception as e:
+        print(f"Failed to send email: {e}")
+
+def send_teams_notification(ev: Dict):
+    """Send Microsoft Teams notification for a new event."""
+    if not TEAMS_WEBHOOK_URL:
+        return
+    
+    try:
+        # Create Teams message card format
+        card = {
+            "@type": "MessageCard",
+            "@context": "https://schema.org/extensions",
+            "summary": f"New EUGLOH Event: {ev.get('title', 'Untitled')}",
+            "themeColor": "0078D7",
+            "title": "New EUGLOH Event Detected!",
+            "sections": [
+                {
+                    "activityTitle": ev.get('title', 'Untitled'),
+                    "activitySubtitle": ev.get('date', 'Date not available'),
+                    "facts": [
+                        {
+                            "name": "Description:",
+                            "value": ev.get('description', 'No description available')
+                        }
+                    ],
+                    "markdown": True
+                }
+            ],
+            "potentialAction": [
+                {
+                    "@type": "OpenUri",
+                    "name": "View Event",
+                    "targets": [
+                        {
+                            "os": "default",
+                            "uri": ev.get('link', '#')
+                        }
+                    ]
+                }
+            ]
+        }
+        
+        r = requests.post(TEAMS_WEBHOOK_URL, json=card, timeout=REQUEST_TIMEOUT)
+        r.raise_for_status()
+        print(f"Teams notification sent for event: {ev['id']}")
+    except Exception as e:
+        print(f"Failed to send Teams notification: {e}")
+
 def append_to_feed(feed_file: str, new_events: List[Dict]):
     """
     Prepend new items to feed_file so newest items are at the top.
@@ -289,6 +410,8 @@ def main():
     for ev in new_events:
         print("New:", ev["id"], "| title:", ev.get("title"), "| date:", ev.get("date"))
         post_to_webhook(ev)
+        send_email_notification(ev)
+        send_teams_notification(ev)
         seen.add(ev["id"])
 
     # Prepend newest first (so feed top is newest)
