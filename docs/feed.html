@@ -44,10 +44,15 @@
             const link = it.querySelector('link')?.textContent || '#';
             const pub = it.querySelector('pubDate')?.textContent || '';
             const desc = it.querySelector('description')?.textContent || '';
+            const category = it.querySelector('category')?.textContent || '';
+            const isNew = category === 'new';
             const node = document.createElement('article');
             node.className = 'item';
             node.innerHTML = `
-              <h2 class="item-title"><a href="${link}" target="_blank" rel="noopener">${escapeHtml(title)}</a></h2>
+              <h2 class="item-title">
+                <a href="${link}" target="_blank" rel="noopener">${escapeHtml(title)}</a>
+                ${isNew ? '<span class="badge-new">NEW</span>' : ''}
+              </h2>
               <div class="meta">${escapeHtml(pub)}</div>
               <div class="desc">${desc}</div>
             `;
