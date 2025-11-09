@@ -49,6 +49,7 @@
           <a class="button" href="./feed.xml">Raw RSS</a>
           <button class="button secondary" id="markAllRead">Mark all as read</button>
           <button class="button secondary" id="clearRead">Clear read status</button>
+          <button class="button secondary" id="enableNotifications">🔔 Enable Notifications</button>
         </p>
       </header>
 
@@ -105,8 +106,151 @@
           
           renderItems();
           updateStats();
+          checkForNewEvents();
         } catch (err) {
           content.innerHTML = `<p class="error">Failed to load feed.xml: ${err.message}</p>`;
+        }
+      }
+
+      // Notification functionality
+      let notificationsEnabled = localStorage.getItem('notificationsEnabled') === 'true';
+      let lastSeenEventIds = new Set(JSON.parse(localStorage.getItem('lastSeenEventIds') || '[]'));
+
+      async function requestNotificationPermission() {
+        if (!('Notification' in window)) {
+          alert('This browser does not support desktop notifications');
+          return false;
+        }
+
+        if (Notification.permission === 'granted') {
+          return true;
+        } else if (Notification.permission !== 'denied') {
+          const permission = await Notification.requestPermission();
+          return permission === 'granted';
+        }
+        return false;
+      }
+
+      function checkForNewEvents() {
+        if (!notificationsEnabled || Notification.permission !== 'granted') {
+          return;
+        }
+
+        // Get current new events
+        const currentNewEventIds = allItems
+          .filter(item => item.isNew)
+          .map(item => item.guid);
+
+        // Find truly new events (not seen before)
+        const brandNewEvents = allItems.filter(item => 
+          item.isNew && !lastSeenEventIds.has(item.guid)
+        );
+
+        if (brandNewEvents.length > 0) {
+          // Show notification for new events
+          const eventCount = brandNewEvents.length;
+          const title = eventCount === 1 
+            ? '🎓 New EUGLOH Event!' 
+            : `🎓 ${eventCount} New EUGLOH Events!`;
+          
+          const body = eventCount === 1
+            ? brandNewEvents[0].title
+            : brandNewEvents.map(e => e.title).slice(0, 3).join('\n') + 
+              (eventCount > 3 ? `\n...and ${eventCount - 3} more` : '');
+
+          new Notification(title, {
+            body: body,
+            icon: 'https://www.eugloh.eu/wp-content/uploads/2021/06/cropped-eugloh-logo-vertical-300x300.png',
+            tag: 'eugloh-new-events',
+            requireInteraction: false
+          });
+        }
+
+        // Update last seen event IDs
+        lastSeenEventIds = new Set(currentNewEventIds);
+        localStorage.setItem('lastSeenEventIds', JSON.stringify([...lastSeenEventIds]));
+      }
+
+      function updateNotificationButton() {
+        const btn = document.getElementById('enableNotifications');
+        if (!btn) return;
+
+        if (notificationsEnabled && Notification.permission === 'granted') {
+          btn.textContent = '🔔 Notifications Enabled';
+          btn.style.opacity = '0.7';
+        } else if (Notification.permission === 'denied') {
+          btn.textContent = '🔕 Notifications Blocked';
+          btn.disabled = true;
+          btn.style.opacity = '0.5';
+        } else {
+          btn.textContent = '🔔 Enable Notifications';
+          btn.style.opacity = '1';
+        }
+      }
+
+      async function enableNotifications() {
+        const granted = await requestNotificationPermission();
+        if (granted) {
+          notificationsEnabled = true;
+          localStorage.setItem('notificationsEnabled', 'true');
+          updateNotificationButton();
+          
+          // Initialize last seen with current new events
+          const currentNewEventIds = allItems
+            .filter(item => item.isNew)
+            .map(item => item.guid);
+          lastSeenEventIds = new Set(currentNewEventIds);
+          localStorage.setItem('lastSeenEventIds', JSON.stringify([...lastSeenEventIds]));
+          
+          alert('Notifications enabled! You\'ll be notified when new events are added.');
+        } else {
+          alert('Notification permission denied. Please enable notifications in your browser settings.');
+        }
+      }
+
+      // Auto-check for new events every 5 minutes
+      function startAutoCheck() {
+        if (notificationsEnabled && Notification.permission === 'granted') {
+          setInterval(async () => {
+            try {
+              const resp = await fetch('./feed.xml');
+              if (resp.ok) {
+                const text = await resp.text();
+                const doc = new DOMParser().parseFromString(text, 'application/xml');
+                const items = Array.from(doc.querySelectorAll('item'));
+                
+                const previousItemCount = allItems.length;
+                allItems = items.map(it => {
+                  const rawDescription = it.querySelector('description')?.textContent || '';
+                  let cleanDesc = rawDescription.replace(/^Find out more and register now\s*/i, '');
+                  let deadline = null;
+                  const deadlineMatch = cleanDesc.match(/Deadline:\s*(.+?)(\s*$|(?=\n))/i);
+                  if (deadlineMatch) {
+                    deadline = deadlineMatch[1].trim();
+                  }
+                  
+                  return {
+                    title: it.querySelector('title')?.textContent || 'Untitled',
+                    link: it.querySelector('link')?.textContent || '#',
+                    pubDate: it.querySelector('pubDate')?.textContent || '',
+                    description: rawDescription,
+                    cleanDescription: cleanDesc,
+                    deadline: deadline,
+                    guid: it.querySelector('guid')?.textContent || '',
+                    categories: Array.from(it.querySelectorAll('category')).map(c => c.textContent),
+                    isNew: Array.from(it.querySelectorAll('category')).some(c => c.textContent === 'new'),
+                    element: it
+                  };
+                });
+                
+                checkForNewEvents();
+                renderItems();
+                updateStats();
+              }
+            } catch (err) {
+              console.error('Failed to check for new events:', err);
+            }
+          }, 5 * 60 * 1000); // Check every 5 minutes
         }
       }
 
@@ -352,8 +496,16 @@
         }
       });
 
+      document.getElementById('enableNotifications').addEventListener('click', enableNotifications);
+
+      // Initialize notification button state
+      updateNotificationButton();
+
       // Load feed on page load
       loadFeed();
+
+      // Start auto-check for new events
+      startAutoCheck();
     </script>
   </body>
 </html>
