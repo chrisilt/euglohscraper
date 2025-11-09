@@ -372,6 +372,21 @@ def append_to_feed(feed_file: str, new_events: List[Dict]):
     if os.path.exists(feed_file):
         with open(feed_file, "r", encoding="utf-8") as f:
             existing = f.read()
+        
+        # Update lastBuildDate and pubDate in existing feed
+        import re
+        existing = re.sub(
+            r'<lastBuildDate>.*?</lastBuildDate>',
+            f'<lastBuildDate>{now}</lastBuildDate>',
+            existing
+        )
+        existing = re.sub(
+            r'<pubDate>.*?</pubDate>',
+            f'<pubDate>{now}</pubDate>',
+            existing,
+            count=1  # Only replace the first pubDate (channel-level, not item-level)
+        )
+        
         # naive prepend after <channel> line but preserve channel metadata
         insert_after = existing.find("<channel>")
         if insert_after != -1:
@@ -426,6 +441,33 @@ def create_feed_header() -> str:
   <atom:link href="https://chrisilt.github.io/euglohscraper/feed.xml" rel="self" type="application/rss+xml" />
 """
 
+def update_feed_timestamp(feed_file: str):
+    """Update lastBuildDate in feed even when no new items are added."""
+    if not os.path.exists(feed_file):
+        return
+    
+    import re
+    now = time.strftime("%a, %d %b %Y %H:%M:%S +0000", time.gmtime())
+    
+    try:
+        with open(feed_file, "r", encoding="utf-8") as f:
+            content = f.read()
+        
+        # Update lastBuildDate
+        content = re.sub(
+            r'<lastBuildDate>.*?</lastBuildDate>',
+            f'<lastBuildDate>{now}</lastBuildDate>',
+            content
+        )
+        
+        with open(feed_file + ".tmp", "w", encoding="utf-8") as f:
+            f.write(content)
+        os.replace(feed_file + ".tmp", feed_file)
+        print(f"Updated lastBuildDate in {feed_file}")
+    except Exception as e:
+        print(f"Failed to update feed timestamp: {e}")
+
+
 # ---- Main ----
 def main():
     state = load_state(STATE_FILE)
@@ -446,6 +488,8 @@ def main():
         print("No new events")
         state["last_checked"] = int(time.time())
         save_state(STATE_FILE, state)
+        # Update lastBuildDate in feed even when no new items
+        update_feed_timestamp(FEED_FILE)
         return
 
     # Process each new event
