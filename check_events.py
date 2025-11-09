@@ -39,7 +39,10 @@ TARGET_URL = os.environ.get(
 )
 REG_LINK_SELECTOR = os.environ.get(
     "REG_LINK_SELECTOR",
-    "div.buttons-wrap:nth-child(3) > div:nth-child(1) > p:nth-child(1) > a:nth-child(1)",
+    # More robust default: match the registration button inside buttons-wrap or p.formUrl,
+    # or any anchor whose href contains "register"/"registration"/"intranet".
+    # This is deliberately broad to avoid brittle :nth-child selectors used previously.
+    "div.buttons-wrap a.button, p.formUrl a, div.buttons-wrap a[href*='register'], a[href*='register'], a[href*='intranet.eugloh.eu']",
 )
 TITLE_SELECTOR = os.environ.get("TITLE_SELECTOR", "h5.headline")
 DATE_SELECTOR = os.environ.get("DATE_SELECTOR", "time, .date")

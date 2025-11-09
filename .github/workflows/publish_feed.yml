@@ -1,0 +1,47 @@
+
+name: Generate and publish feed.xml to docs/
+
+on:
+  schedule:
+    - cron: '0 * * * *'   # hourly
+  workflow_dispatch: {}
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Generate feed.xml
+        run: python check_events.py
+
+      - name: Commit feed.xml into docs/ on main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          mkdir -p docs
+          mv feed.xml docs/feed.xml || true
+          git add docs/feed.xml
+          # Only commit if there are changes
+          if git diff --staged --quiet; then
+            echo "No changes to docs/feed.xml"
+          else
+            git commit -m "Update generated feed.xml [skip ci]"
+            git push origin HEAD:main
+          fi
