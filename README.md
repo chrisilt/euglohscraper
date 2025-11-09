@@ -41,7 +41,7 @@ python check_events.py
 
 ## Configuration
 
-All configuration is done via environment variables:
+All configuration is done via environment variables. You can set them directly in your shell, or create a `.env` file (see `.env.example` for a template).
 
 ### Basic Configuration
 - `TARGET_URL` — URL to scrape (defaults to EUGLOH open registrations page)
