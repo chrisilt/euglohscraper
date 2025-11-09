@@ -313,5 +313,108 @@ class TestDeduplication(unittest.TestCase):
         self.assertEqual(new_events[0]['id'], 'event2')
 
 
+class TestNewEventCategory(unittest.TestCase):
+    """Test that NEW events are properly tagged in RSS feed."""
+    
+    def test_new_events_have_category_tag(self):
+        """Test that new events include the <category>new</category> tag."""
+        with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.xml') as f:
+            temp_path = f.name
+        os.unlink(temp_path)
+        
+        try:
+            events = [
+                {
+                    'id': 'https://example.com/event1',
+                    'title': 'New Event',
+                    'link': 'https://example.com/event1',
+                    'description': 'A brand new event',
+                    'date': '2025-12-01'
+                }
+            ]
+            
+            append_to_feed(temp_path, events)
+            
+            with open(temp_path, 'r') as f:
+                content = f.read()
+            
+            # Verify the feed contains the 'new' category
+            self.assertIn('<category>new</category>', content)
+            # Verify it's in the correct item
+            self.assertIn('<title>New Event</title>', content)
+        finally:
+            if os.path.exists(temp_path):
+                os.unlink(temp_path)
+    
+    def test_feed_stats_count_new_events(self):
+        """Test that frontend can correctly identify new events from feed."""
+        with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.xml') as f:
+            temp_path = f.name
+        os.unlink(temp_path)
+        
+        try:
+            # Create multiple events, all tagged as new
+            events = [
+                {
+                    'id': 'https://example.com/event1',
+                    'title': 'Event 1',
+                    'link': 'https://example.com/event1',
+                    'description': 'Description 1',
+                    'date': '2025-12-01'
+                },
+                {
+                    'id': 'https://example.com/event2',
+                    'title': 'Event 2',
+                    'link': 'https://example.com/event2',
+                    'description': 'Description 2',
+                    'date': '2025-12-02'
+                }
+            ]
+            
+            append_to_feed(temp_path, events)
+            
+            with open(temp_path, 'r') as f:
+                content = f.read()
+            
+            # Count occurrences of the new category tag
+            new_count = content.count('<category>new</category>')
+            self.assertEqual(new_count, 2, "Should have 2 new events")
+        finally:
+            if os.path.exists(temp_path):
+                os.unlink(temp_path)
+    
+    def test_new_category_in_all_new_items(self):
+        """Test that every new event gets the new category tag."""
+        with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.xml') as f:
+            temp_path = f.name
+        os.unlink(temp_path)
+        
+        try:
+            events = [
+                {
+                    'id': f'https://example.com/event{i}',
+                    'title': f'Event {i}',
+                    'link': f'https://example.com/event{i}',
+                    'description': f'Description {i}',
+                    'date': '2025-12-01'
+                }
+                for i in range(5)
+            ]
+            
+            append_to_feed(temp_path, events)
+            
+            with open(temp_path, 'r') as f:
+                content = f.read()
+            
+            # Verify all items have the new category
+            item_count = content.count('<item>')
+            new_count = content.count('<category>new</category>')
+            self.assertEqual(item_count, 5, "Should have 5 items")
+            self.assertEqual(new_count, 5, "All 5 items should be tagged as new")
+        finally:
+            if os.path.exists(temp_path):
+                os.unlink(temp_path)
+
+
 if __name__ == '__main__':
     unittest.main()
