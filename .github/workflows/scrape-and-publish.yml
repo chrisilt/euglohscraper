@@ -2,7 +2,7 @@ name: Scrape EUGLOH and Publish Feed
 
 on:
   schedule:
-    - cron: "0 * * * *"   # every hour
+    - cron: "0 6 * * *"   # once daily at 6 AM UTC
   workflow_dispatch: {}
 
 permissions:

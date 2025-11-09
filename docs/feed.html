@@ -3,15 +3,35 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>EUGLOH feed</title>
+    <title>EUGLOH Event Feed</title>
     <link rel="stylesheet" href="./style.css">
   </head>
   <body>
     <main class="wrap">
       <header>
-        <h1>EUGLOH — Open registrations</h1>
-        <p class="lead">Latest open registrations discovered by the scraper.</p>
-        <p class="actions"><a class="button" href="./feed.xml">Raw RSS</a></p>
+        <h1>EUGLOH — Open Registrations</h1>
+        <p class="lead">Latest open registrations discovered by the scraper. <span id="stats" class="stats-badge"></span></p>
+        
+        <!-- Search and Filter Controls -->
+        <div class="controls">
+          <input type="search" id="searchBox" placeholder="Search events..." class="search-input" />
+          <div class="filter-group">
+            <label class="filter-label">
+              <input type="checkbox" id="showNewOnly" />
+              <span>Show NEW only</span>
+            </label>
+            <label class="filter-label">
+              <input type="checkbox" id="hideRead" />
+              <span>Hide read</span>
+            </label>
+          </div>
+        </div>
+        
+        <p class="actions">
+          <a class="button" href="./feed.xml">Raw RSS</a>
+          <button class="button secondary" id="markAllRead">Mark all as read</button>
+          <button class="button secondary" id="clearRead">Clear read status</button>
+        </p>
       </header>
 
       <section id="content">
@@ -19,11 +39,14 @@
       </section>
 
       <footer>
-        <small>Powered by <code>check_events.py</code></small>
+        <small>Powered by <code>check_events.py</code> | <a href="https://github.com/chrisilt/euglohscraper" target="_blank" rel="noopener">View on GitHub</a></small>
       </footer>
     </main>
 
     <script>
+      let allItems = [];
+      let readItems = new Set(JSON.parse(localStorage.getItem('readItems') || '[]'));
+
       async function loadFeed() {
         const content = document.getElementById('content');
         content.innerHTML = '<p class="loading">Fetching feed.xml…</p>';
@@ -37,32 +60,162 @@
             content.innerHTML = '<p>No items found in feed.xml</p>';
             return;
           }
-          const list = document.createElement('div');
-          list.className = 'items';
-          items.forEach(it => {
-            const title = it.querySelector('title')?.textContent || 'Untitled';
-            const link = it.querySelector('link')?.textContent || '#';
-            const pub = it.querySelector('pubDate')?.textContent || '';
-            const desc = it.querySelector('description')?.textContent || '';
-            const category = it.querySelector('category')?.textContent || '';
-            const isNew = category === 'new';
-            const node = document.createElement('article');
-            node.className = 'item';
-            node.innerHTML = `
-              <h2 class="item-title">
-                <a href="${link}" target="_blank" rel="noopener">${escapeHtml(title)}</a>
-                ${isNew ? '<span class="badge-new">NEW</span>' : ''}
-              </h2>
-              <div class="meta">${escapeHtml(pub)}</div>
-              <div class="desc">${desc}</div>
-            `;
-            list.appendChild(node);
-          });
-          content.innerHTML = '';
-          content.appendChild(list);
+          
+          allItems = items.map(it => ({
+            title: it.querySelector('title')?.textContent || 'Untitled',
+            link: it.querySelector('link')?.textContent || '#',
+            pubDate: it.querySelector('pubDate')?.textContent || '',
+            description: it.querySelector('description')?.textContent || '',
+            guid: it.querySelector('guid')?.textContent || '',
+            categories: Array.from(it.querySelectorAll('category')).map(c => c.textContent),
+            isNew: Array.from(it.querySelectorAll('category')).some(c => c.textContent === 'new'),
+            element: it
+          }));
+          
+          renderItems();
+          updateStats();
         } catch (err) {
           content.innerHTML = `<p class="error">Failed to load feed.xml: ${err.message}</p>`;
         }
+      }
+
+      function renderItems() {
+        const content = document.getElementById('content');
+        const searchTerm = document.getElementById('searchBox').value.toLowerCase();
+        const showNewOnly = document.getElementById('showNewOnly').checked;
+        const hideRead = document.getElementById('hideRead').checked;
+        
+        let filtered = allItems.filter(item => {
+          // Search filter
+          if (searchTerm && !item.title.toLowerCase().includes(searchTerm) && 
+              !item.description.toLowerCase().includes(searchTerm)) {
+            return false;
+          }
+          
+          // New only filter
+          if (showNewOnly && !item.isNew) {
+            return false;
+          }
+          
+          // Hide read filter
+          if (hideRead && readItems.has(item.guid)) {
+            return false;
+          }
+          
+          return true;
+        });
+        
+        if (filtered.length === 0) {
+          content.innerHTML = '<p class="empty-state">No events match your filters</p>';
+          return;
+        }
+        
+        const list = document.createElement('div');
+        list.className = 'items';
+        
+        filtered.forEach(item => {
+          const isRead = readItems.has(item.guid);
+          const node = document.createElement('article');
+          node.className = 'item' + (isRead ? ' read' : '');
+          node.dataset.guid = item.guid;
+          
+          node.innerHTML = `
+            <h2 class="item-title">
+              <a href="${item.link}" target="_blank" rel="noopener" data-guid="${item.guid}">${escapeHtml(item.title)}</a>
+              ${item.isNew ? '<span class="badge-new">NEW</span>' : ''}
+              ${isRead ? '<span class="badge-read">READ</span>' : ''}
+            </h2>
+            <div class="meta">
+              <span class="date">${escapeHtml(item.pubDate)}</span>
+            </div>
+            <div class="desc">${item.description}</div>
+            <div class="item-actions">
+              <button class="link-button mark-read" data-guid="${item.guid}">
+                ${isRead ? '✓ Read' : 'Mark as read'}
+              </button>
+              <button class="link-button share-button" data-title="${escapeHtml(item.title)}" data-url="${item.link}">
+                Share
+              </button>
+            </div>
+          `;
+          list.appendChild(node);
+        });
+        
+        content.innerHTML = '';
+        content.appendChild(list);
+        
+        // Add event listeners
+        document.querySelectorAll('.mark-read').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const guid = e.target.dataset.guid;
+            toggleRead(guid);
+          });
+        });
+        
+        document.querySelectorAll('.item-title a').forEach(link => {
+          link.addEventListener('click', (e) => {
+            const guid = e.target.dataset.guid;
+            markAsRead(guid);
+          });
+        });
+        
+        document.querySelectorAll('.share-button').forEach(btn => {
+          btn.addEventListener('click', async (e) => {
+            const title = e.target.dataset.title;
+            const url = e.target.dataset.url;
+            if (navigator.share) {
+              try {
+                await navigator.share({ title, url });
+              } catch (err) {
+                if (err.name !== 'AbortError') {
+                  fallbackShare(url);
+                }
+              }
+            } else {
+              fallbackShare(url);
+            }
+          });
+        });
+      }
+
+      function toggleRead(guid) {
+        if (readItems.has(guid)) {
+          readItems.delete(guid);
+        } else {
+          readItems.add(guid);
+        }
+        saveReadItems();
+        renderItems();
+        updateStats();
+      }
+
+      function markAsRead(guid) {
+        if (!readItems.has(guid)) {
+          readItems.add(guid);
+          saveReadItems();
+          renderItems();
+          updateStats();
+        }
+      }
+
+      function saveReadItems() {
+        localStorage.setItem('readItems', JSON.stringify([...readItems]));
+      }
+
+      function updateStats() {
+        const total = allItems.length;
+        const newCount = allItems.filter(item => item.isNew).length;
+        const unreadCount = allItems.filter(item => !readItems.has(item.guid)).length;
+        const statsEl = document.getElementById('stats');
+        statsEl.textContent = `${total} total • ${newCount} new • ${unreadCount} unread`;
+      }
+
+      function fallbackShare(url) {
+        navigator.clipboard.writeText(url).then(() => {
+          alert('Link copied to clipboard!');
+        }).catch(() => {
+          alert('Could not copy link. Please copy manually: ' + url);
+        });
       }
 
       function escapeHtml(s) {
@@ -74,6 +227,28 @@
           .replace(/'/g, '&#39;');
       }
 
+      // Event listeners
+      document.getElementById('searchBox').addEventListener('input', renderItems);
+      document.getElementById('showNewOnly').addEventListener('change', renderItems);
+      document.getElementById('hideRead').addEventListener('change', renderItems);
+      
+      document.getElementById('markAllRead').addEventListener('click', () => {
+        allItems.forEach(item => readItems.add(item.guid));
+        saveReadItems();
+        renderItems();
+        updateStats();
+      });
+      
+      document.getElementById('clearRead').addEventListener('click', () => {
+        if (confirm('Clear all read status?')) {
+          readItems.clear();
+          saveReadItems();
+          renderItems();
+          updateStats();
+        }
+      });
+
+      // Load feed on page load
       loadFeed();
     </script>
   </body>
