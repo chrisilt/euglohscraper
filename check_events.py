@@ -233,6 +233,7 @@ def append_to_feed(feed_file: str, new_events: List[Dict]):
     <description>{desc}</description>
     <pubDate>{pubdate}</pubDate>
     <guid isPermaLink="false">{escape(ev["id"])}</guid>
+    <category>new</category>
   </item>\n"""
 
     if os.path.exists(feed_file):
