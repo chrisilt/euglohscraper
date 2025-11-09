@@ -236,6 +236,8 @@ def send_email_notification(ev: Dict):
         return
     
     try:
+        from html import escape
+        
         # Create message
         msg = MIMEMultipart('alternative')
         msg['Subject'] = f"New EUGLOH Event: {ev.get('title', 'Untitled')}"
@@ -256,15 +258,21 @@ Description: {ev.get('description', 'N/A')}
 This is an automated notification from the EUGLOH Course Watcher.
 """
         
+        # Escape HTML entities to prevent XSS
+        title = escape(ev.get('title', 'N/A'))
+        date = escape(ev.get('date', 'N/A'))
+        link = escape(ev.get('link', 'N/A'))
+        description = escape(ev.get('description', 'N/A'))
+        
         html_content = f"""
 <html>
   <head></head>
   <body>
     <h2>New EUGLOH Event Detected!</h2>
-    <p><strong>Title:</strong> {ev.get('title', 'N/A')}</p>
-    <p><strong>Date:</strong> {ev.get('date', 'N/A')}</p>
-    <p><strong>Link:</strong> <a href="{ev.get('link', '#')}">{ev.get('link', 'N/A')}</a></p>
-    <p><strong>Description:</strong> {ev.get('description', 'N/A')}</p>
+    <p><strong>Title:</strong> {title}</p>
+    <p><strong>Date:</strong> {date}</p>
+    <p><strong>Link:</strong> <a href="{link}">{link}</a></p>
+    <p><strong>Description:</strong> {description}</p>
     <hr>
     <p><em>This is an automated notification from the EUGLOH Course Watcher.</em></p>
   </body>
