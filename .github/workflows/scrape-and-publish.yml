@@ -53,7 +53,9 @@ jobs:
       - name: Publish feed to docs
         run: |
           mkdir -p docs
-          cp feed.xml docs/feed.xml
+          if [ -f feed.xml ]; then
+            cp feed.xml docs/feed.xml
+          fi
 
       - name: Commit and push changes
         run: |
