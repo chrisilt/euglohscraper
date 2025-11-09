@@ -196,10 +196,27 @@ def extract_event_from_anchor(a_tag: Tag) -> Optional[Dict]:
             pprev = a_tag.find_previous("p")
             if pprev and pprev.get_text(strip=True):
                 description = pprev.get_text(strip=True)
+    
+    # Clean up description: remove "Find out more and register now" prefix
+    # and properly format deadline information
+    if description:
+        # Remove common phrases that aren't useful in RSS
+        description = description.replace("Find out more and register now", "").strip()
+        
+        # Format deadline information properly
+        if date and date.strip():
+            # If description contains deadline info, ensure it's formatted nicely
+            if "Deadline:" not in description and date:
+                description = f"Deadline: {date}" if not description else f"{description}\n\nDeadline: {date}"
+            # If description is empty or just whitespace after cleanup, use date
+            if not description.strip():
+                description = f"Deadline: {date}"
 
     # final fallbacks
     if not title:
         title = link
+    if not description:
+        description = f"Event: {title}" if date else title
 
     return {
         "id": eid,
