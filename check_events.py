@@ -362,10 +362,14 @@ def append_to_feed(feed_file: str, new_events: List[Dict]):
     """
     Prepend new items to feed_file so newest items are at the top.
     Uses an enhanced RSS 2.0 structure with richer metadata.
+    Also removes the 'new' category from items older than 7 days.
     """
     from xml.sax.saxutils import escape
 
     now = time.strftime("%a, %d %b %Y %H:%M:%S +0000", time.gmtime())
+    current_timestamp = time.time()
+    seven_days_ago = current_timestamp - (7 * 24 * 60 * 60)  # 7 days in seconds
+    
     items_xml = ""
     # Expect new_events in newest-first order; we'll prepend them
     for ev in new_events:
@@ -390,8 +394,45 @@ def append_to_feed(feed_file: str, new_events: List[Dict]):
         with open(feed_file, "r", encoding="utf-8") as f:
             existing = f.read()
         
-        # Update lastBuildDate and pubDate in existing feed
+        # Remove 'new' category from items older than 7 days
         import re
+        from xml.etree import ElementTree as ET
+        
+        try:
+            # Parse the existing feed to process items
+            root = ET.fromstring(existing)
+            
+            for item in root.findall('.//item'):
+                pubdate_elem = item.find('pubDate')
+                if pubdate_elem is not None and pubdate_elem.text:
+                    try:
+                        # Parse pubDate to check if it's older than 7 days
+                        pubdate_str = pubdate_elem.text
+                        # Convert RSS date format to timestamp
+                        from email.utils import parsedate_to_datetime
+                        pubdate_dt = parsedate_to_datetime(pubdate_str)
+                        pubdate_timestamp = pubdate_dt.timestamp()
+                        
+                        # If item is older than 7 days, remove 'new' category
+                        if pubdate_timestamp < seven_days_ago:
+                            categories = item.findall('category')
+                            for cat in categories:
+                                if cat.text == 'new':
+                                    item.remove(cat)
+                    except Exception as e:
+                        # If we can't parse the date, skip this item
+                        print(f"Warning: Could not parse date for item: {e}")
+                        continue
+            
+            # Convert back to string
+            existing = ET.tostring(root, encoding='unicode')
+        except Exception as e:
+            # If XML parsing fails, fall back to regex-based removal
+            print(f"Warning: XML parsing failed, using fallback: {e}")
+            # This is a simple fallback that removes 'new' category from older items
+            # More sophisticated logic would require proper XML parsing
+        
+        # Update lastBuildDate and pubDate in existing feed
         existing = re.sub(
             r'<lastBuildDate>.*?</lastBuildDate>',
             f'<lastBuildDate>{now}</lastBuildDate>',

@@ -414,6 +414,62 @@ class TestNewEventCategory(unittest.TestCase):
         finally:
             if os.path.exists(temp_path):
                 os.unlink(temp_path)
+    
+    def test_old_events_lose_new_category(self):
+        """Test that events older than 7 days lose the 'new' category."""
+        with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.xml') as f:
+            temp_path = f.name
+        os.unlink(temp_path)
+        
+        try:
+            import time as time_module
+            
+            # Create an old event (8 days ago)
+            eight_days_ago = time_module.time() - (8 * 24 * 60 * 60)
+            old_date = time_module.strftime("%a, %d %b %Y %H:%M:%S +0000", time_module.gmtime(eight_days_ago))
+            
+            old_events = [
+                {
+                    'id': 'https://example.com/old-event',
+                    'title': 'Old Event',
+                    'link': 'https://example.com/old-event',
+                    'description': 'An old event',
+                    'date': old_date
+                }
+            ]
+            
+            # Add old event to feed
+            append_to_feed(temp_path, old_events)
+            
+            # Verify it initially has the 'new' category
+            with open(temp_path, 'r') as f:
+                content = f.read()
+            self.assertIn('<category>new</category>', content)
+            
+            # Now add a new event, which should trigger cleanup of old 'new' tags
+            new_event = [
+                {
+                    'id': 'https://example.com/fresh-event',
+                    'title': 'Fresh Event',
+                    'link': 'https://example.com/fresh-event',
+                    'description': 'A fresh event',
+                    'date': time_module.strftime("%a, %d %b %Y %H:%M:%S +0000", time_module.gmtime())
+                }
+            ]
+            
+            append_to_feed(temp_path, new_event)
+            
+            with open(temp_path, 'r') as f:
+                content = f.read()
+            
+            # The fresh event should have 'new' category
+            self.assertIn('Fresh Event', content)
+            # Count 'new' categories - should be 1 (only the fresh event)
+            new_count = content.count('<category>new</category>')
+            self.assertEqual(new_count, 1, "Only the fresh event should have 'new' category")
+        finally:
+            if os.path.exists(temp_path):
+                os.unlink(temp_path)
 
 
 if __name__ == '__main__':
