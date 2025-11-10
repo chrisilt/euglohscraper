@@ -516,13 +516,24 @@ def update_event_history(history: Dict, event: Dict, status: str = "active"):
 
 def generate_statistics(history: Dict, state: Dict) -> Dict:
     """
-    Generate statistics from historical data and current state.
+    Generate comprehensive statistics from historical data and current state.
     
     Returns:
-        Dictionary with statistics
+        Dictionary with statistics including:
+        - Basic counts (total, active, expired, new)
+        - Registration duration statistics
+        - Upcoming deadlines
+        - Monthly trends
+        - Recently expired events
+        - Long-running events
+        - Event velocity metrics
     """
+    from datetime import datetime, timedelta
+    from collections import defaultdict
+    
     current_time = time.time()
     one_week_ago = current_time - (7 * 24 * 60 * 60)
+    one_month_ago = current_time - (30 * 24 * 60 * 60)
     
     stats = {
         "generated_at": int(current_time),
@@ -532,19 +543,78 @@ def generate_statistics(history: Dict, state: Dict) -> Dict:
         "new_this_week": 0,
         "upcoming_deadlines": [],
         "average_registration_duration_days": None,
+        # Enhanced statistics
+        "new_this_month": 0,
+        "expired_this_week": 0,
+        "expired_this_month": 0,
+        "registration_duration_stats": {},
+        "recently_expired": [],
+        "long_running_events": [],
+        "monthly_trends": [],
+        "event_velocity": {},
+        "active_event_ages": {},
     }
     
     durations = []
     upcoming = []
+    recently_expired = []
+    long_running = []
+    monthly_counts = defaultdict(int)
+    active_ages = []
     
     for event_id, event_data in history.get("events", {}).items():
+        first_seen = event_data.get("first_seen", 0)
+        expired_at = event_data.get("expired_at")
+        
+        # Track monthly trends (events added per month)
+        if first_seen:
+            month_key = datetime.fromtimestamp(first_seen).strftime("%Y-%m")
+            monthly_counts[month_key] += 1
+        
+        # Check if new this week/month
+        if first_seen >= one_week_ago:
+            stats["new_this_week"] += 1
+        if first_seen >= one_month_ago:
+            stats["new_this_month"] += 1
+        
+        # Check if expired this week/month
+        if expired_at:
+            if expired_at >= one_week_ago:
+                stats["expired_this_week"] += 1
+            if expired_at >= one_month_ago:
+                stats["expired_this_month"] += 1
+        
         # Check if expired
         if event_data.get("deadline"):
             is_expired = is_event_expired(event_data["deadline"], EXPIRED_DAYS_BUFFER)
             if is_expired:
                 stats["total_expired"] += 1
+                
+                # Track recently expired events (last 7 days)
+                if expired_at and expired_at >= one_week_ago:
+                    recently_expired.append({
+                        "title": event_data.get("title", "Unknown"),
+                        "deadline": event_data.get("deadline", ""),
+                        "expired_at": expired_at,
+                        "link": event_data.get("link", ""),
+                        "registration_duration_days": event_data.get("registration_duration_days")
+                    })
             else:
                 stats["currently_active"] += 1
+                
+                # Track active event age (how long they've been open)
+                if first_seen:
+                    days_active = (current_time - first_seen) / (24 * 60 * 60)
+                    active_ages.append(days_active)
+                    
+                    # Track long-running events (active for > 60 days)
+                    if days_active > 60:
+                        long_running.append({
+                            "title": event_data.get("title", "Unknown"),
+                            "deadline": event_data.get("deadline", ""),
+                            "days_active": round(days_active, 1),
+                            "link": event_data.get("link", "")
+                        })
                 
                 # Add to upcoming deadlines
                 deadline_ts = parse_deadline(event_data["deadline"])
@@ -558,27 +628,60 @@ def generate_statistics(history: Dict, state: Dict) -> Dict:
                             "link": event_data.get("link", "")
                         })
         
-        # Check if new this week
-        first_seen = event_data.get("first_seen", 0)
-        if first_seen >= one_week_ago:
-            stats["new_this_week"] += 1
-        
         # Collect durations
         if event_data.get("registration_duration_days"):
             durations.append(event_data["registration_duration_days"])
     
-    # Calculate average duration
+    # Calculate registration duration statistics
     if durations:
         stats["average_registration_duration_days"] = round(sum(durations) / len(durations), 1)
+        stats["registration_duration_stats"] = {
+            "min": round(min(durations), 1),
+            "max": round(max(durations), 1),
+            "median": round(sorted(durations)[len(durations) // 2], 1),
+            "average": round(sum(durations) / len(durations), 1),
+            "total_completed": len(durations)
+        }
     
-    # Sort upcoming deadlines by days remaining
+    # Calculate active event age statistics
+    if active_ages:
+        stats["active_event_ages"] = {
+            "min": round(min(active_ages), 1),
+            "max": round(max(active_ages), 1),
+            "median": round(sorted(active_ages)[len(active_ages) // 2], 1),
+            "average": round(sum(active_ages) / len(active_ages), 1)
+        }
+    
+    # Calculate event velocity (events per week/month)
+    if history.get("events"):
+        all_first_seen = [e.get("first_seen", 0) for e in history["events"].values() if e.get("first_seen", 0) > 0]
+        if all_first_seen:
+            oldest_event = min(all_first_seen)
+            total_days = (current_time - oldest_event) / (24 * 60 * 60)
+            if total_days > 0:
+                stats["event_velocity"] = {
+                    "events_per_week": round(len(history["events"]) / (total_days / 7), 2),
+                    "events_per_month": round(len(history["events"]) / (total_days / 30), 2),
+                    "tracking_days": round(total_days, 1)
+                }
+    
+    # Sort and limit lists
     stats["upcoming_deadlines"] = sorted(upcoming, key=lambda x: x["days_remaining"])[:10]
+    stats["recently_expired"] = sorted(recently_expired, key=lambda x: x["expired_at"], reverse=True)[:10]
+    stats["long_running_events"] = sorted(long_running, key=lambda x: x["days_active"], reverse=True)[:10]
+    
+    # Format monthly trends (last 12 months)
+    sorted_months = sorted(monthly_counts.keys(), reverse=True)[:12]
+    stats["monthly_trends"] = [
+        {"month": month, "events_added": monthly_counts[month]}
+        for month in reversed(sorted_months)  # Show oldest to newest for charts
+    ]
     
     return stats
 
 def save_statistics(stats: Dict, json_path: str, html_path: str):
     """
-    Save statistics to JSON and generate HTML page.
+    Save statistics to JSON and generate enhanced HTML page with charts and additional metrics.
     
     Args:
         stats: Statistics dictionary
@@ -596,6 +699,7 @@ def save_statistics(stats: Dict, json_path: str, html_path: str):
     from datetime import datetime
     generated_time = datetime.fromtimestamp(stats["generated_at"]).strftime("%Y-%m-%d %H:%M:%S UTC")
     
+    # Build upcoming deadlines table
     upcoming_html = ""
     for deadline in stats.get("upcoming_deadlines", []):
         upcoming_html += f"""
@@ -608,6 +712,116 @@ def save_statistics(stats: Dict, json_path: str, html_path: str):
     if not upcoming_html:
         upcoming_html = "<tr><td colspan='3'>No upcoming deadlines in the next 30 days</td></tr>"
     
+    # Build recently expired events table
+    recently_expired_html = ""
+    for event in stats.get("recently_expired", []):
+        duration_text = f"{event.get('registration_duration_days', 'N/A')} days" if event.get('registration_duration_days') else "N/A"
+        recently_expired_html += f"""
+        <tr>
+            <td><a href="{event['link']}" target="_blank">{event['title']}</a></td>
+            <td>{event['deadline']}</td>
+            <td>{duration_text}</td>
+        </tr>"""
+    
+    if not recently_expired_html:
+        recently_expired_html = "<tr><td colspan='3'>No events expired in the last 7 days</td></tr>"
+    
+    # Build long-running events table
+    long_running_html = ""
+    for event in stats.get("long_running_events", []):
+        long_running_html += f"""
+        <tr>
+            <td><a href="{event['link']}" target="_blank">{event['title']}</a></td>
+            <td>{event['deadline']}</td>
+            <td>{event['days_active']} days</td>
+        </tr>"""
+    
+    if not long_running_html:
+        long_running_html = "<tr><td colspan='3'>No long-running events (active > 60 days)</td></tr>"
+    
+    # Generate Chart.js data for monthly trends
+    chart_data = {
+        "labels": [trend["month"] for trend in stats.get("monthly_trends", [])],
+        "data": [trend["events_added"] for trend in stats.get("monthly_trends", [])]
+    }
+    import json as json_module
+    chart_data_json = json_module.dumps(chart_data)
+    
+    # Build registration duration stats section
+    duration_stats_html = ""
+    if stats.get("registration_duration_stats"):
+        rd = stats["registration_duration_stats"]
+        duration_stats_html = f"""
+        <h2>📈 Registration Duration Analysis</h2>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value">{rd['average']} days</div>
+                <div class="stat-label">Average Duration</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{rd['median']} days</div>
+                <div class="stat-label">Median Duration</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{rd['min']} days</div>
+                <div class="stat-label">Shortest Duration</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{rd['max']} days</div>
+                <div class="stat-label">Longest Duration</div>
+            </div>
+        </div>
+        <p style="text-align: center; color: #6c757d;">Based on {rd['total_completed']} completed event(s)</p>
+        """
+    
+    # Build event velocity section
+    velocity_html = ""
+    if stats.get("event_velocity"):
+        ev = stats["event_velocity"]
+        velocity_html = f"""
+        <h2>⚡ Event Velocity</h2>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value">{ev['events_per_week']}</div>
+                <div class="stat-label">Events per Week</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{ev['events_per_month']}</div>
+                <div class="stat-label">Events per Month</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{ev['tracking_days']}</div>
+                <div class="stat-label">Days of Tracking</div>
+            </div>
+        </div>
+        """
+    
+    # Build active event ages section
+    active_ages_html = ""
+    if stats.get("active_event_ages"):
+        aa = stats["active_event_ages"]
+        active_ages_html = f"""
+        <h2>⏱️ Active Event Ages</h2>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value">{aa['average']} days</div>
+                <div class="stat-label">Average Age</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{aa['median']} days</div>
+                <div class="stat-label">Median Age</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{aa['min']} days</div>
+                <div class="stat-label">Newest Event</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{aa['max']} days</div>
+                <div class="stat-label">Oldest Event</div>
+            </div>
+        </div>
+        """
+    
     html_content = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -615,32 +829,47 @@ def save_statistics(stats: Dict, json_path: str, html_path: str):
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EUGLOH Event Statistics</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
+        body {{
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f0f2f5;
+            margin: 0;
+            padding: 0;
+        }}
         .stats-container {{
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 20px auto;
             padding: 20px;
         }}
         .stat-card {{
-            background: #f8f9fa;
+            background: white;
             border-left: 4px solid #007bff;
             padding: 20px;
             margin: 15px 0;
-            border-radius: 4px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }}
+        .stat-card:hover {{
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         }}
         .stat-value {{
-            font-size: 2em;
+            font-size: 2.5em;
             font-weight: bold;
             color: #007bff;
+            margin-bottom: 5px;
         }}
         .stat-label {{
             color: #6c757d;
             font-size: 0.9em;
             text-transform: uppercase;
+            letter-spacing: 0.5px;
         }}
         .stats-grid {{
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
             gap: 20px;
             margin: 20px 0;
         }}
@@ -649,39 +878,113 @@ def save_statistics(stats: Dict, json_path: str, html_path: str):
             border-collapse: collapse;
             margin: 20px 0;
             background: white;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            overflow: hidden;
         }}
         th, td {{
-            padding: 12px;
+            padding: 14px;
             text-align: left;
-            border-bottom: 1px solid #ddd;
+            border-bottom: 1px solid #e9ecef;
         }}
         th {{
-            background: #007bff;
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
             color: white;
-            font-weight: bold;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85em;
+            letter-spacing: 0.5px;
         }}
         tr:hover {{
-            background: #f5f5f5;
+            background: #f8f9fa;
+        }}
+        tr:last-child td {{
+            border-bottom: none;
         }}
         .header {{
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 40px;
+            padding: 30px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }}
+        h1 {{
+            margin: 0 0 10px 0;
+            color: #212529;
+            font-size: 2.5em;
+        }}
+        h2 {{
+            color: #212529;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+            border-bottom: 3px solid #007bff;
+            padding-bottom: 10px;
         }}
         .timestamp {{
             color: #6c757d;
-            font-size: 0.9em;
+            font-size: 1em;
+            margin: 10px 0;
+        }}
+        .nav-links {{
+            margin-top: 15px;
+        }}
+        .nav-links a {{
+            color: #007bff;
+            text-decoration: none;
+            margin: 0 10px;
+            font-weight: 500;
+            transition: color 0.2s;
+        }}
+        .nav-links a:hover {{
+            color: #0056b3;
+            text-decoration: underline;
+        }}
+        .chart-container {{
+            background: white;
+            padding: 30px;
+            margin: 30px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }}
+        .section-grid {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }}
+        .mini-card {{
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+        }}
+        .mini-card-value {{
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #1976d2;
+        }}
+        .mini-card-label {{
+            font-size: 0.8em;
+            color: #546e7a;
+            margin-top: 5px;
         }}
     </style>
 </head>
 <body>
     <div class="stats-container">
         <div class="header">
-            <h1>📊 EUGLOH Event Statistics</h1>
-            <p class="timestamp">Generated: {generated_time}</p>
-            <p><a href="feed.xml">RSS Feed</a> | <a href="index.html">Event List</a> | <a href="stats.json">Raw Data (JSON)</a></p>
+            <h1>📊 EUGLOH Event Statistics Dashboard</h1>
+            <p class="timestamp">Last Updated: {generated_time}</p>
+            <div class="nav-links">
+                <a href="feed.xml">📡 RSS Feed</a> |
+                <a href="index.html">📋 Event List</a> |
+                <a href="stats.json">💾 Raw Data (JSON)</a>
+            </div>
         </div>
         
+        <h2>📌 Overview</h2>
         <div class="stats-grid">
             <div class="stat-card">
                 <div class="stat-value">{stats['total_events_tracked']}</div>
@@ -699,14 +1002,24 @@ def save_statistics(stats: Dict, json_path: str, html_path: str):
                 <div class="stat-value">{stats['new_this_week']}</div>
                 <div class="stat-label">New This Week</div>
             </div>
+            <div class="stat-card">
+                <div class="stat-value">{stats.get('new_this_month', 0)}</div>
+                <div class="stat-label">New This Month</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{stats.get('expired_this_week', 0)}</div>
+                <div class="stat-label">Expired This Week</div>
+            </div>
         </div>
         
-        {f'''
-        <div class="stat-card">
-            <div class="stat-value">{stats['average_registration_duration_days']} days</div>
-            <div class="stat-label">Average Registration Duration</div>
+        {velocity_html}
+        {duration_stats_html}
+        {active_ages_html}
+        
+        <h2>📅 Monthly Event Trends</h2>
+        <div class="chart-container">
+            <canvas id="monthlyTrendsChart"></canvas>
         </div>
-        ''' if stats.get('average_registration_duration_days') else ''}
         
         <h2>🔔 Upcoming Deadlines (Next 30 Days)</h2>
         <table>
@@ -721,7 +1034,92 @@ def save_statistics(stats: Dict, json_path: str, html_path: str):
                 {upcoming_html}
             </tbody>
         </table>
+        
+        <h2>⏰ Recently Expired (Last 7 Days)</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Event</th>
+                    <th>Deadline</th>
+                    <th>Registration Duration</th>
+                </tr>
+            </thead>
+            <tbody>
+                {recently_expired_html}
+            </tbody>
+        </table>
+        
+        <h2>🏃 Long-Running Events (Active > 60 Days)</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Event</th>
+                    <th>Deadline</th>
+                    <th>Days Active</th>
+                </tr>
+            </thead>
+            <tbody>
+                {long_running_html}
+            </tbody>
+        </table>
     </div>
+    
+    <script>
+        // Monthly trends chart
+        const chartData = {chart_data_json};
+        if (chartData.labels.length > 0) {{
+            const ctx = document.getElementById('monthlyTrendsChart').getContext('2d');
+            new Chart(ctx, {{
+                type: 'bar',
+                data: {{
+                    labels: chartData.labels,
+                    datasets: [{{
+                        label: 'Events Added',
+                        data: chartData.data,
+                        backgroundColor: 'rgba(0, 123, 255, 0.6)',
+                        borderColor: 'rgba(0, 123, 255, 1)',
+                        borderWidth: 2,
+                        borderRadius: 6,
+                    }}]
+                }},
+                options: {{
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {{
+                        legend: {{
+                            display: false
+                        }},
+                        title: {{
+                            display: true,
+                            text: 'Event Discovery Rate by Month',
+                            font: {{
+                                size: 16,
+                                weight: 'bold'
+                            }}
+                        }}
+                    }},
+                    scales: {{
+                        y: {{
+                            beginAtZero: true,
+                            ticks: {{
+                                stepSize: 1
+                            }},
+                            title: {{
+                                display: true,
+                                text: 'Number of Events'
+                            }}
+                        }},
+                        x: {{
+                            title: {{
+                                display: true,
+                                text: 'Month'
+                            }}
+                        }}
+                    }}
+                }}
+            }});
+        }}
+    </script>
 </body>
 </html>"""
     
