@@ -70,6 +70,14 @@ EMAIL_SMTP_PASSWORD = os.environ.get("EMAIL_SMTP_PASSWORD", "")
 # Microsoft Teams webhook configuration
 TEAMS_WEBHOOK_URL = os.environ.get("TEAMS_WEBHOOK_URL", "")
 
+# Expired events configuration
+EXPIRED_DAYS_BUFFER = int(os.environ.get("EXPIRED_DAYS_BUFFER") or "0")  # Grace period after deadline
+
+# Historical tracking and statistics
+HISTORY_FILE = os.environ.get("HISTORY_FILE", "./history.json")
+STATS_FILE = os.environ.get("STATS_FILE", "./docs/stats.json")
+STATS_HTML_FILE = os.environ.get("STATS_HTML_FILE", "./docs/stats.html")
+
 # ---- Helpers ----
 def load_state(path: str) -> Dict:
     try:
@@ -118,6 +126,98 @@ def _find_in_ancestors(el: Tag, css_selector: str, max_levels: int = 6) -> Optio
             pass
         parent = parent.parent
     return None
+
+def parse_deadline(date_str: str) -> Optional[float]:
+    """
+    Parse a deadline date string and return a Unix timestamp.
+    Handles multiple date formats commonly found in EUGLOH events.
+    Returns None if parsing fails.
+    """
+    if not date_str:
+        return None
+    
+    from datetime import datetime
+    import re
+    
+    # Common date formats in EUGLOH events
+    formats = [
+        "%d %b %Y %H:%M",      # "31 Dec 2026 23:59"
+        "%d %B %Y %H:%M",      # "31 December 2026 23:59"
+        "%Y-%m-%d %H:%M:%S",   # "2026-12-31 23:59:00"
+        "%Y-%m-%d",            # "2026-12-31"
+        "%d/%m/%Y",            # "31/12/2026"
+        "%d.%m.%Y",            # "31.12.2026"
+    ]
+    
+    # Extract date from "Deadline: 31 Dec 2026 23:59" format
+    date_text = date_str
+    if "Deadline:" in date_text:
+        date_text = date_text.split("Deadline:")[-1].strip()
+    
+    # Try each format
+    for fmt in formats:
+        try:
+            dt = datetime.strptime(date_text.strip(), fmt)
+            return dt.timestamp()
+        except ValueError:
+            continue
+    
+    # Try to extract date with regex for flexible formats
+    # Match patterns like "31 Dec 2026" or "December 31, 2026"
+    patterns = [
+        r'(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+(\d{4})(?:\s+(\d{1,2}):(\d{2}))?',
+        r'(\d{4})-(\d{1,2})-(\d{1,2})(?:\s+(\d{1,2}):(\d{2}))?',
+    ]
+    
+    for pattern in patterns:
+        match = re.search(pattern, date_text, re.IGNORECASE)
+        if match:
+            try:
+                if 'Jan' in pattern or 'Feb' in pattern:
+                    # Month name format
+                    day, month_str, year = match.group(1), match.group(2), match.group(3)
+                    hour = match.group(4) if match.group(4) else "23"
+                    minute = match.group(5) if match.group(5) else "59"
+                    
+                    months = {'jan': 1, 'feb': 2, 'mar': 3, 'apr': 4, 'may': 5, 'jun': 6,
+                             'jul': 7, 'aug': 8, 'sep': 9, 'oct': 10, 'nov': 11, 'dec': 12}
+                    month = months.get(month_str.lower()[:3], 1)
+                    
+                    dt = datetime(int(year), month, int(day), int(hour), int(minute))
+                    return dt.timestamp()
+                else:
+                    # ISO format
+                    year, month, day = match.group(1), match.group(2), match.group(3)
+                    hour = match.group(4) if match.group(4) else "23"
+                    minute = match.group(5) if match.group(5) else "59"
+                    
+                    dt = datetime(int(year), int(month), int(day), int(hour), int(minute))
+                    return dt.timestamp()
+            except (ValueError, AttributeError):
+                continue
+    
+    return None
+
+def is_event_expired(date_str: str, buffer_days: int = 0) -> bool:
+    """
+    Check if an event has expired based on its deadline.
+    
+    Args:
+        date_str: The date string from the event
+        buffer_days: Grace period in days after the deadline
+    
+    Returns:
+        True if the event is expired, False otherwise
+    """
+    deadline_timestamp = parse_deadline(date_str)
+    if deadline_timestamp is None:
+        # If we can't parse the date, assume it's not expired
+        return False
+    
+    current_timestamp = time.time()
+    buffer_seconds = buffer_days * 24 * 60 * 60
+    
+    return current_timestamp > (deadline_timestamp + buffer_seconds)
 
 # ---- Extraction logic ----
 def extract_event_from_anchor(a_tag: Tag) -> Optional[Dict]:
@@ -358,6 +458,281 @@ def send_teams_notification(ev: Dict):
     except Exception as e:
         print(f"Failed to send Teams notification: {e}")
 
+# ---- Historical Tracking ----
+def load_history(path: str) -> Dict:
+    """Load historical event data."""
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return {"events": {}}
+    except Exception as e:
+        print(f"Failed to load history: {e}")
+        return {"events": {}}
+
+def save_history(path: str, history: Dict):
+    """Save historical event data."""
+    tmp = path + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(history, f, indent=2, ensure_ascii=False)
+    os.replace(tmp, path)
+
+def update_event_history(history: Dict, event: Dict, status: str = "active"):
+    """
+    Update historical tracking for an event.
+    
+    Args:
+        history: The history dictionary
+        event: The event to track
+        status: "new", "active", or "expired"
+    """
+    event_id = event["id"]
+    current_time = int(time.time())
+    
+    if event_id not in history["events"]:
+        # New event - record first discovery
+        history["events"][event_id] = {
+            "id": event_id,
+            "title": event.get("title", ""),
+            "link": event.get("link", ""),
+            "deadline": event.get("date", ""),
+            "first_seen": current_time,
+            "last_seen": current_time,
+            "expired_at": None,
+            "registration_duration_days": None,
+        }
+    else:
+        # Update last seen
+        history["events"][event_id]["last_seen"] = current_time
+    
+    # Check if event expired
+    if status == "expired" and history["events"][event_id]["expired_at"] is None:
+        history["events"][event_id]["expired_at"] = current_time
+        
+        # Calculate registration duration
+        first_seen = history["events"][event_id]["first_seen"]
+        duration_days = (current_time - first_seen) / (24 * 60 * 60)
+        history["events"][event_id]["registration_duration_days"] = round(duration_days, 1)
+
+def generate_statistics(history: Dict, state: Dict) -> Dict:
+    """
+    Generate statistics from historical data and current state.
+    
+    Returns:
+        Dictionary with statistics
+    """
+    current_time = time.time()
+    one_week_ago = current_time - (7 * 24 * 60 * 60)
+    
+    stats = {
+        "generated_at": int(current_time),
+        "total_events_tracked": len(history.get("events", {})),
+        "currently_active": 0,
+        "total_expired": 0,
+        "new_this_week": 0,
+        "upcoming_deadlines": [],
+        "average_registration_duration_days": None,
+    }
+    
+    durations = []
+    upcoming = []
+    
+    for event_id, event_data in history.get("events", {}).items():
+        # Check if expired
+        if event_data.get("deadline"):
+            is_expired = is_event_expired(event_data["deadline"], EXPIRED_DAYS_BUFFER)
+            if is_expired:
+                stats["total_expired"] += 1
+            else:
+                stats["currently_active"] += 1
+                
+                # Add to upcoming deadlines
+                deadline_ts = parse_deadline(event_data["deadline"])
+                if deadline_ts:
+                    days_until = (deadline_ts - current_time) / (24 * 60 * 60)
+                    if days_until > 0 and days_until <= 30:  # Next 30 days
+                        upcoming.append({
+                            "title": event_data.get("title", "Unknown"),
+                            "deadline": event_data.get("deadline", ""),
+                            "days_remaining": round(days_until, 1),
+                            "link": event_data.get("link", "")
+                        })
+        
+        # Check if new this week
+        first_seen = event_data.get("first_seen", 0)
+        if first_seen >= one_week_ago:
+            stats["new_this_week"] += 1
+        
+        # Collect durations
+        if event_data.get("registration_duration_days"):
+            durations.append(event_data["registration_duration_days"])
+    
+    # Calculate average duration
+    if durations:
+        stats["average_registration_duration_days"] = round(sum(durations) / len(durations), 1)
+    
+    # Sort upcoming deadlines by days remaining
+    stats["upcoming_deadlines"] = sorted(upcoming, key=lambda x: x["days_remaining"])[:10]
+    
+    return stats
+
+def save_statistics(stats: Dict, json_path: str, html_path: str):
+    """
+    Save statistics to JSON and generate HTML page.
+    
+    Args:
+        stats: Statistics dictionary
+        json_path: Path to save JSON
+        html_path: Path to save HTML
+    """
+    # Save JSON
+    os.makedirs(os.path.dirname(json_path), exist_ok=True)
+    tmp = json_path + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(stats, f, indent=2, ensure_ascii=False)
+    os.replace(tmp, json_path)
+    
+    # Generate HTML
+    from datetime import datetime
+    generated_time = datetime.fromtimestamp(stats["generated_at"]).strftime("%Y-%m-%d %H:%M:%S UTC")
+    
+    upcoming_html = ""
+    for deadline in stats.get("upcoming_deadlines", []):
+        upcoming_html += f"""
+        <tr>
+            <td><a href="{deadline['link']}" target="_blank">{deadline['title']}</a></td>
+            <td>{deadline['deadline']}</td>
+            <td>{deadline['days_remaining']} days</td>
+        </tr>"""
+    
+    if not upcoming_html:
+        upcoming_html = "<tr><td colspan='3'>No upcoming deadlines in the next 30 days</td></tr>"
+    
+    html_content = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EUGLOH Event Statistics</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .stats-container {{
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+        }}
+        .stat-card {{
+            background: #f8f9fa;
+            border-left: 4px solid #007bff;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }}
+        .stat-value {{
+            font-size: 2em;
+            font-weight: bold;
+            color: #007bff;
+        }}
+        .stat-label {{
+            color: #6c757d;
+            font-size: 0.9em;
+            text-transform: uppercase;
+        }}
+        .stats-grid {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }}
+        table {{
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }}
+        th, td {{
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }}
+        th {{
+            background: #007bff;
+            color: white;
+            font-weight: bold;
+        }}
+        tr:hover {{
+            background: #f5f5f5;
+        }}
+        .header {{
+            text-align: center;
+            margin-bottom: 30px;
+        }}
+        .timestamp {{
+            color: #6c757d;
+            font-size: 0.9em;
+        }}
+    </style>
+</head>
+<body>
+    <div class="stats-container">
+        <div class="header">
+            <h1>📊 EUGLOH Event Statistics</h1>
+            <p class="timestamp">Generated: {generated_time}</p>
+            <p><a href="feed.xml">RSS Feed</a> | <a href="index.html">Event List</a> | <a href="stats.json">Raw Data (JSON)</a></p>
+        </div>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value">{stats['total_events_tracked']}</div>
+                <div class="stat-label">Total Events Tracked</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{stats['currently_active']}</div>
+                <div class="stat-label">Currently Active</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{stats['total_expired']}</div>
+                <div class="stat-label">Total Expired</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{stats['new_this_week']}</div>
+                <div class="stat-label">New This Week</div>
+            </div>
+        </div>
+        
+        {f'''
+        <div class="stat-card">
+            <div class="stat-value">{stats['average_registration_duration_days']} days</div>
+            <div class="stat-label">Average Registration Duration</div>
+        </div>
+        ''' if stats.get('average_registration_duration_days') else ''}
+        
+        <h2>🔔 Upcoming Deadlines (Next 30 Days)</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Event</th>
+                    <th>Deadline</th>
+                    <th>Time Remaining</th>
+                </tr>
+            </thead>
+            <tbody>
+                {upcoming_html}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>"""
+    
+    os.makedirs(os.path.dirname(html_path), exist_ok=True)
+    tmp = html_path + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        f.write(html_content)
+    os.replace(tmp, html_path)
+    
+    print(f"Statistics saved to {json_path} and {html_path}")
+
 def append_to_feed(feed_file: str, new_events: List[Dict]):
     """
     Prepend new items to feed_file so newest items are at the top.
@@ -419,6 +794,20 @@ def append_to_feed(feed_file: str, new_events: List[Dict]):
                             for cat in categories:
                                 if cat.text == 'new':
                                     item.remove(cat)
+                        
+                        # Check if event is expired and mark it
+                        # Extract deadline from description or pubDate
+                        description_elem = item.find('description')
+                        if description_elem is not None and description_elem.text:
+                            desc_text = description_elem.text
+                            if is_event_expired(desc_text, EXPIRED_DAYS_BUFFER):
+                                # Check if 'expired' category already exists
+                                categories = item.findall('category')
+                                has_expired = any(cat.text == 'expired' for cat in categories)
+                                if not has_expired:
+                                    # Add expired category
+                                    expired_cat = ET.SubElement(item, 'category')
+                                    expired_cat.text = 'expired'
                     except Exception as e:
                         # If we can't parse the date, skip this item
                         print(f"Warning: Could not parse date for item: {e}")
@@ -530,6 +919,9 @@ def update_feed_timestamp(feed_file: str):
 def main():
     state = load_state(STATE_FILE)
     seen = set(state.get("seen_ids", []))
+    
+    # Load historical tracking data
+    history = load_history(HISTORY_FILE)
 
     try:
         html = fetch_page(TARGET_URL)
@@ -539,15 +931,34 @@ def main():
 
     events = find_events(html)
     print(f"Found {len(events)} candidate events via selector: {REG_LINK_SELECTOR}")
+    
+    # Update history for all current events (to track last_seen)
+    for ev in events:
+        # Check if expired
+        event_status = "expired" if is_event_expired(ev.get("date", ""), EXPIRED_DAYS_BUFFER) else "active"
+        update_event_history(history, ev, event_status)
 
     # Deduplicate: only events whose id (normalized link) not in seen
     new_events = [e for e in events if e["id"] not in seen]
+    
+    # Save history even if no new events (for last_seen tracking)
+    save_history(HISTORY_FILE, history)
+    
+    # Generate and save statistics
+    stats = generate_statistics(history, state)
+    save_statistics(stats, STATS_FILE, STATS_HTML_FILE)
+    
     if not new_events:
         print("No new events")
         state["last_checked"] = int(time.time())
         save_state(STATE_FILE, state)
         # Update lastBuildDate in feed even when no new items
         update_feed_timestamp(FEED_FILE)
+        
+        # Still update feed to mark expired events
+        if os.path.exists(FEED_FILE):
+            # Trigger feed update to mark expired events
+            append_to_feed(FEED_FILE, [])
         return
 
     # Process each new event
@@ -557,6 +968,9 @@ def main():
         send_email_notification(ev)
         send_teams_notification(ev)
         seen.add(ev["id"])
+        
+        # Update history for new events
+        update_event_history(history, ev, "new")
 
     # Prepend newest first (so feed top is newest)
     append_to_feed(FEED_FILE, new_events[::-1])
@@ -564,6 +978,14 @@ def main():
     state["seen_ids"] = list(seen)
     state["last_checked"] = int(time.time())
     save_state(STATE_FILE, state)
+    
+    # Save history after processing new events
+    save_history(HISTORY_FILE, history)
+    
+    # Regenerate statistics after new events
+    stats = generate_statistics(history, state)
+    save_statistics(stats, STATS_FILE, STATS_HTML_FILE)
+    
     print(f"Saved state: {len(state['seen_ids'])} seen ids")
 
 if __name__ == "__main__":

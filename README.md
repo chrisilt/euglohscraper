@@ -23,6 +23,9 @@ A tiny scraper that watches EUGLOH course & event pages and builds a public RSS 
 - Email notifications for new events (SMTP)
 - Microsoft Teams notifications via webhook
 - Deduplication to avoid duplicate notifications
+- **Expired event handling** — Automatically marks expired events with `<category>expired</category>` in RSS feed
+- **Historical tracking** — Tracks event lifecycle (when added, when expired, registration duration)
+- **Statistics dashboard** — View event statistics at `/docs/stats.html` with JSON API at `/docs/stats.json`
 
 ## Run Locally (2 minutes)
 ```bash
@@ -38,6 +41,9 @@ python check_events.py
 ## What the Script Creates
 - `seen.json` — internal state used to avoid reposting the same event
 - `feed.xml` — RSS feed with newly discovered events (new items are prepended)
+- `history.json` — historical tracking of all events (when discovered, expired, duration)
+- `docs/stats.json` — event statistics in JSON format
+- `docs/stats.html` — interactive statistics dashboard
 
 ## Configuration
 
@@ -61,6 +67,14 @@ All configuration is done via environment variables. You can set them directly i
 - `EMAIL_SMTP_USER` — SMTP username
 - `EMAIL_SMTP_PASSWORD` — SMTP password
 - `TEAMS_WEBHOOK_URL` — Microsoft Teams incoming webhook URL
+
+### Expired Event Handling
+- `EXPIRED_DAYS_BUFFER` — Grace period in days after deadline before marking as expired (defaults to 0)
+
+### Historical Tracking & Statistics
+- `HISTORY_FILE` — Path to historical tracking JSON (defaults to `./history.json`)
+- `STATS_FILE` — Path to statistics JSON output (defaults to `./docs/stats.json`)
+- `STATS_HTML_FILE` — Path to statistics HTML dashboard (defaults to `./docs/stats.html`)
 
 ## Publish via GitHub Pages (Recommended)
 1. Use the included workflow to automatically generate and commit `docs/feed.xml` (or push the file manually)
@@ -100,6 +114,38 @@ To use notifications in GitHub Actions, add the secrets to your repository:
 
 ## Web Viewer
 A lightweight viewer is provided in the `docs/` folder. It fetches `feed.xml` and renders a simple, mobile-friendly list of items.
+
+## Event Statistics Dashboard
+The scraper automatically generates a statistics dashboard showing:
+- **Total events tracked** — All events discovered since tracking began
+- **Currently active** — Events with registration still open
+- **Total expired** — Events past their deadline
+- **New this week** — Events discovered in the last 7 days
+- **Average registration duration** — How long registrations typically remain open
+- **Upcoming deadlines** — Events expiring in the next 30 days
+
+Access the dashboard at:
+- **HTML**: `https://<your>.github.io/euglohscraper/stats.html`
+- **JSON API**: `https://<your>.github.io/euglohscraper/stats.json`
+
+The statistics are automatically updated each time the scraper runs.
+
+## Expired Event Handling
+Events are automatically checked against their deadlines. When an event expires:
+- It's marked with `<category>expired</category>` in the RSS feed
+- Historical data records the expiration time and calculates registration duration
+- The event remains in the feed but is visually distinguished as expired
+
+You can configure a grace period with `EXPIRED_DAYS_BUFFER` to keep events active for a few days after their deadline (e.g., set to `7` to keep events for a week after expiration).
+
+## Historical Tracking
+The scraper maintains a complete history of all events in `history.json`:
+- **First seen**: When the event was first discovered
+- **Last seen**: Last time the event was observed on the source page
+- **Expired at**: When the event's deadline passed
+- **Registration duration**: How long registration was open (in days)
+
+This data powers the statistics dashboard and provides insights into EUGLOH event patterns.
 
 ## Troubleshooting
 - If the Action doesn't publish, check Actions → the run logs for errors
