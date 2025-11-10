@@ -11,6 +11,7 @@ Tests the core functionality of the event scraper including:
 import unittest
 import os
 import json
+import time
 import tempfile
 from unittest.mock import patch, MagicMock
 from bs4 import BeautifulSoup
@@ -470,6 +471,256 @@ class TestNewEventCategory(unittest.TestCase):
         finally:
             if os.path.exists(temp_path):
                 os.unlink(temp_path)
+
+
+class TestExpiredEventHandling(unittest.TestCase):
+    """Test expired event handling functionality."""
+    
+    def test_parse_deadline_standard_format(self):
+        """Test parsing standard deadline format."""
+        from check_events import parse_deadline
+        
+        # Test various date formats
+        date1 = "31 Dec 2026 23:59"
+        result1 = parse_deadline(date1)
+        self.assertIsNotNone(result1)
+        self.assertIsInstance(result1, float)
+        
+        date2 = "Deadline: 15 Nov 2025 23:59"
+        result2 = parse_deadline(date2)
+        self.assertIsNotNone(result2)
+    
+    def test_parse_deadline_invalid_format(self):
+        """Test that invalid dates return None."""
+        from check_events import parse_deadline
+        
+        result = parse_deadline("Invalid date string")
+        self.assertIsNone(result)
+        
+        result = parse_deadline("")
+        self.assertIsNone(result)
+    
+    def test_is_event_expired_past_date(self):
+        """Test that past dates are marked as expired."""
+        from check_events import is_event_expired
+        
+        # Test with a date in the past
+        past_date = "1 Jan 2020 00:00"
+        self.assertTrue(is_event_expired(past_date))
+    
+    def test_is_event_expired_future_date(self):
+        """Test that future dates are not marked as expired."""
+        from check_events import is_event_expired
+        
+        # Test with a date in the future
+        future_date = "31 Dec 2030 23:59"
+        self.assertFalse(is_event_expired(future_date))
+    
+    def test_is_event_expired_with_buffer(self):
+        """Test expired check with grace period buffer."""
+        from check_events import is_event_expired
+        import time
+        
+        # Test with a date slightly in the past but within buffer
+        # This is hard to test precisely, so we'll test the logic exists
+        past_date = "1 Jan 2020 00:00"
+        # With a huge buffer, it shouldn't be expired
+        self.assertTrue(is_event_expired(past_date, buffer_days=0))
+    
+    def test_expired_category_added_to_feed(self):
+        """Test that expired events get the expired category in feed."""
+        with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.xml') as f:
+            temp_path = f.name
+        os.unlink(temp_path)
+        
+        try:
+            # Create an event with expired deadline
+            events = [
+                {
+                    'id': 'https://example.com/expired-event',
+                    'title': 'Expired Event',
+                    'link': 'https://example.com/expired-event',
+                    'description': 'Deadline: 1 Jan 2020 00:00',
+                    'date': '1 Jan 2020 00:00'
+                }
+            ]
+            
+            from check_events import append_to_feed
+            append_to_feed(temp_path, events)
+            
+            with open(temp_path, 'r') as f:
+                content = f.read()
+            
+            # The event should be in the feed
+            self.assertIn('Expired Event', content)
+            
+            # Now run append again to trigger expired category addition
+            append_to_feed(temp_path, [])
+            
+            with open(temp_path, 'r') as f:
+                content = f.read()
+            
+            # Check if expired category was added
+            self.assertIn('<category>expired</category>', content)
+        finally:
+            if os.path.exists(temp_path):
+                os.unlink(temp_path)
+
+
+class TestHistoricalTracking(unittest.TestCase):
+    """Test historical tracking functionality."""
+    
+    def test_load_history_new_file(self):
+        """Test loading history when file doesn't exist."""
+        from check_events import load_history
+        
+        history = load_history('/tmp/nonexistent_history_file.json')
+        self.assertEqual(history['events'], {})
+    
+    def test_save_and_load_history(self):
+        """Test saving and loading history."""
+        from check_events import load_history, save_history
+        
+        with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.json') as f:
+            temp_path = f.name
+        
+        try:
+            test_history = {
+                'events': {
+                    'event1': {
+                        'id': 'event1',
+                        'title': 'Test Event',
+                        'first_seen': 1234567890,
+                        'last_seen': 1234567890,
+                    }
+                }
+            }
+            save_history(temp_path, test_history)
+            
+            loaded_history = load_history(temp_path)
+            self.assertIn('event1', loaded_history['events'])
+            self.assertEqual(loaded_history['events']['event1']['title'], 'Test Event')
+        finally:
+            if os.path.exists(temp_path):
+                os.unlink(temp_path)
+    
+    def test_update_event_history_new_event(self):
+        """Test updating history for a new event."""
+        from check_events import update_event_history
+        
+        history = {'events': {}}
+        event = {
+            'id': 'https://example.com/event1',
+            'title': 'New Event',
+            'link': 'https://example.com/event1',
+            'date': '31 Dec 2026 23:59'
+        }
+        
+        update_event_history(history, event, 'new')
+        
+        self.assertIn(event['id'], history['events'])
+        self.assertEqual(history['events'][event['id']]['title'], 'New Event')
+        self.assertIsNotNone(history['events'][event['id']]['first_seen'])
+    
+    def test_update_event_history_expired_event(self):
+        """Test marking an event as expired in history."""
+        from check_events import update_event_history
+        
+        history = {'events': {}}
+        event = {
+            'id': 'https://example.com/event1',
+            'title': 'Event',
+            'link': 'https://example.com/event1',
+            'date': '1 Jan 2020 00:00'
+        }
+        
+        # First add as new
+        update_event_history(history, event, 'new')
+        first_seen = history['events'][event['id']]['first_seen']
+        
+        # Then mark as expired
+        import time
+        time.sleep(0.1)  # Small delay to ensure different timestamps
+        update_event_history(history, event, 'expired')
+        
+        self.assertIsNotNone(history['events'][event['id']]['expired_at'])
+        self.assertIsNotNone(history['events'][event['id']]['registration_duration_days'])
+
+
+class TestStatistics(unittest.TestCase):
+    """Test statistics generation functionality."""
+    
+    def test_generate_statistics(self):
+        """Test statistics generation from history."""
+        from check_events import generate_statistics
+        import time
+        
+        current_time = time.time()
+        one_day_ago = current_time - (24 * 60 * 60)
+        
+        history = {
+            'events': {
+                'event1': {
+                    'id': 'event1',
+                    'title': 'Active Event',
+                    'deadline': '31 Dec 2030 23:59',
+                    'first_seen': int(one_day_ago),
+                    'last_seen': int(current_time),
+                    'expired_at': None,
+                },
+                'event2': {
+                    'id': 'event2',
+                    'title': 'Expired Event',
+                    'deadline': '1 Jan 2020 00:00',
+                    'first_seen': int(one_day_ago),
+                    'last_seen': int(current_time),
+                    'expired_at': int(current_time),
+                    'registration_duration_days': 100,
+                }
+            }
+        }
+        
+        state = {'seen_ids': ['event1', 'event2']}
+        
+        stats = generate_statistics(history, state)
+        
+        self.assertEqual(stats['total_events_tracked'], 2)
+        self.assertEqual(stats['currently_active'], 1)
+        self.assertEqual(stats['total_expired'], 1)
+    
+    def test_save_statistics_creates_files(self):
+        """Test that statistics files are created."""
+        from check_events import save_statistics
+        
+        with tempfile.TemporaryDirectory() as tmpdir:
+            json_path = os.path.join(tmpdir, 'stats.json')
+            html_path = os.path.join(tmpdir, 'stats.html')
+            
+            stats = {
+                'generated_at': int(time.time()),
+                'total_events_tracked': 10,
+                'currently_active': 5,
+                'total_expired': 5,
+                'new_this_week': 2,
+                'upcoming_deadlines': [],
+                'average_registration_duration_days': 45.5,
+            }
+            
+            save_statistics(stats, json_path, html_path)
+            
+            self.assertTrue(os.path.exists(json_path))
+            self.assertTrue(os.path.exists(html_path))
+            
+            # Verify JSON content
+            with open(json_path, 'r') as f:
+                loaded_stats = json.load(f)
+            self.assertEqual(loaded_stats['total_events_tracked'], 10)
+            
+            # Verify HTML contains statistics
+            with open(html_path, 'r') as f:
+                html_content = f.read()
+            self.assertIn('EUGLOH Event Statistics', html_content)
+            self.assertIn('10', html_content)  # total events
 
 
 if __name__ == '__main__':

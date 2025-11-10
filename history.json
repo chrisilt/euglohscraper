@@ -1,0 +1,54 @@
+{
+  "events": {
+    "https://intranet.eugloh.eu/events/active-event-1": {
+      "id": "https://intranet.eugloh.eu/events/active-event-1",
+      "title": "Introduction to Global Health Research",
+      "link": "https://intranet.eugloh.eu/events/active-event-1",
+      "deadline": "15 Dec 2025 23:59",
+      "first_seen": 1762157722,
+      "last_seen": 1762762522,
+      "expired_at": null,
+      "registration_duration_days": null
+    },
+    "https://intranet.eugloh.eu/events/active-event-2": {
+      "id": "https://intranet.eugloh.eu/events/active-event-2",
+      "title": "EUGLOH Soft Skills Workshop",
+      "link": "https://intranet.eugloh.eu/events/active-event-2",
+      "deadline": "20 Nov 2025 18:00",
+      "first_seen": 1761984922,
+      "last_seen": 1762762522,
+      "expired_at": null,
+      "registration_duration_days": null
+    },
+    "https://intranet.eugloh.eu/events/active-event-3": {
+      "id": "https://intranet.eugloh.eu/events/active-event-3",
+      "title": "Data Science for Health Applications",
+      "link": "https://intranet.eugloh.eu/events/active-event-3",
+      "deadline": "25 Nov 2025 23:59",
+      "first_seen": 1762071322,
+      "last_seen": 1762762522,
+      "expired_at": null,
+      "registration_duration_days": null
+    },
+    "https://intranet.eugloh.eu/events/expired-event-1": {
+      "id": "https://intranet.eugloh.eu/events/expired-event-1",
+      "title": "Past Workshop on Public Health",
+      "link": "https://intranet.eugloh.eu/events/expired-event-1",
+      "deadline": "1 Oct 2025 23:59",
+      "first_seen": 1757578522,
+      "last_seen": 1760170522,
+      "expired_at": 1760170522,
+      "registration_duration_days": 30.5
+    },
+    "https://intranet.eugloh.eu/events/expired-event-2": {
+      "id": "https://intranet.eugloh.eu/events/expired-event-2",
+      "title": "Summer School on Epidemiology",
+      "link": "https://intranet.eugloh.eu/events/expired-event-2",
+      "deadline": "15 Sep 2025 23:59",
+      "first_seen": 1756714522,
+      "last_seen": 1759738522,
+      "expired_at": 1759738522,
+      "registration_duration_days": 45.2
+    }
+  }
+}
