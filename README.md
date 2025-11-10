@@ -1,33 +1,48 @@
 # EUGLOH Course Watcher
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![Code style: PEP 8](https://img.shields.io/badge/code%20style-PEP%208-orange.svg)](https://www.python.org/dev/peps/pep-0008/)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+
 A tiny scraper that watches EUGLOH course & event pages and builds a public RSS feed of open registrations. Designed to be simple, robust, and easy to host via GitHub Pages.
 
-## Live Demo
-- Feed (RSS): https://chrisilt.github.io/euglohscraper/feed.xml (when Pages is enabled)
-- Web viewer: https://chrisilt.github.io/euglohscraper/ (simple page that shows the feed)
+## 📑 Table of Contents
 
-## Why This Project
-- Keep an eye on new course registrations without visiting the site
-- Feed-based delivery is great for newsletter integrations, email-to-RSS tools, or personal monitoring
-- Optional webhook support for automated pipelines (Zapier, Make, Teams, Email)
+- [Live Demo](#-live-demo)
+- [Features](#-features)
+- [Quick Start](#-quick-start)
+- [Documentation](#-documentation)
+- [Configuration](#configuration)
+- [Deployment](#deployment)
+- [Contributing](#-contributing)
+- [License](#-license)
 
-## Quick Links
-- Scraper: `check_events.py`
-- Generated feed: `feed.xml`
-- Scraper state (dedupe): `seen.json`
+## 🌐 Live Demo
 
-## Features
-- Robust selector defaults (less brittle than :nth-child)
-- Writes a human-friendly `feed.xml` RSS file you can publish via Pages
-- Optional webhook support (Zapier / Make) for automated pipelines
-- Email notifications for new events (SMTP)
-- Microsoft Teams notifications via webhook
-- Deduplication to avoid duplicate notifications
-- **Expired event handling** — Automatically marks expired events with `<category>expired</category>` in RSS feed
-- **Historical tracking** — Tracks event lifecycle (when added, when expired, registration duration)
-- **Statistics dashboard** — View event statistics at `/docs/stats.html` with JSON API at `/docs/stats.json`
+- **RSS Feed**: https://chrisilt.github.io/euglohscraper/feed.xml
+- **Web Viewer**: https://chrisilt.github.io/euglohscraper/
+- **Statistics Dashboard**: https://chrisilt.github.io/euglohscraper/stats.html
 
-## Run Locally (2 minutes)
+## ✨ Features
+
+- **🔍 Intelligent Scraping** — Robust CSS selectors that adapt to HTML structure changes
+- **📡 RSS Feed** — Standard RSS 2.0 format with rich metadata
+- **📧 Email Notifications** — SMTP-based alerts for new events
+- **💬 Microsoft Teams Integration** — Native Teams webhook support
+- **🔗 Generic Webhooks** — Connect to Zapier, Make, n8n, and more
+- **⏰ Expired Event Handling** — Automatic deadline tracking and marking
+- **📊 Statistics Dashboard** — Interactive analytics with Chart.js visualizations
+- **📈 Historical Tracking** — Complete event lifecycle from discovery to expiration
+- **🔄 Deduplication** — Smart state management to prevent duplicate notifications
+- **🚀 GitHub Actions Ready** — Automated execution with zero infrastructure
+- **📱 Mobile-Friendly** — Responsive design for all outputs
+
+## 🚀 Quick Start
+
+Get up and running in 2 minutes:
+
+### Installation
 ```bash
 git clone https://github.com/chrisilt/euglohscraper.git
 cd euglohscraper
@@ -35,87 +50,67 @@ python -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
+### Running the Scraper
+
+```bash
 python check_events.py
 ```
 
-## What the Script Creates
-- `seen.json` — internal state used to avoid reposting the same event
-- `feed.xml` — RSS feed with newly discovered events (new items are prepended)
-- `history.json` — historical tracking of all events (when discovered, expired, duration)
-- `docs/stats.json` — event statistics in JSON format
-- `docs/stats.html` — interactive statistics dashboard
+### Output Files
+
+The scraper creates several files:
+
+- **`seen.json`** — Internal state for deduplication
+- **`feed.xml`** — RSS feed with newly discovered events
+- **`history.json`** — Complete event lifecycle tracking
+- **`docs/stats.json`** — Event statistics in JSON format
+- **`docs/stats.html`** — Interactive analytics dashboard
+
+## 📚 Documentation
+
+Comprehensive documentation is available:
+
+- **[Architecture Guide](docs/ARCHITECTURE.md)** — System design and components
+- **[API Documentation](docs/API.md)** — Function reference and usage
+- **[Deployment Guide](docs/DEPLOYMENT.md)** — Setup instructions for various platforms
+- **[Development Guide](docs/DEVELOPMENT.md)** — Contributing and extending the project
+- **[Troubleshooting Guide](docs/TROUBLESHOOTING.md)** — Common issues and solutions
+- **[Contributing Guidelines](CONTRIBUTING.md)** — How to contribute
+- **[Code of Conduct](CODE_OF_CONDUCT.md)** — Community standards
 
 ## Configuration
 
-All configuration is done via environment variables. You can set them directly in your shell, or create a `.env` file (see `.env.example` for a template).
+## ⚙️ Configuration
 
-### Basic Configuration
-- `TARGET_URL` — URL to scrape (defaults to EUGLOH open registrations page)
-- `REG_LINK_SELECTOR` — CSS selector(s) that match registration anchors
-- `TITLE_SELECTOR` — defaults to `h5.headline`
-- `DATE_SELECTOR` — defaults to `time, .date`
-- `STATE_FILE` — defaults to `./seen.json`
-- `FEED_FILE` — defaults to `./feed.xml`
+All configuration is done via environment variables. You can set them directly in your shell, or create a `.env` file.
 
-### Notification Configuration
-- `WEBHOOK_URL` — optional: a generic webhook to POST new events to
-- `EMAIL_ENABLED` — set to `true` to enable email notifications
-- `EMAIL_FROM` — sender email address
-- `EMAIL_TO` — recipient email address(es), comma-separated
-- `EMAIL_SMTP_HOST` — SMTP server hostname (e.g., `smtp.gmail.com`)
-- `EMAIL_SMTP_PORT` — SMTP server port (defaults to 587 for TLS)
-- `EMAIL_SMTP_USER` — SMTP username
-- `EMAIL_SMTP_PASSWORD` — SMTP password
-- `TEAMS_WEBHOOK_URL` — Microsoft Teams incoming webhook URL
+### Quick Setup
 
-### Expired Event Handling
-- `EXPIRED_DAYS_BUFFER` — Grace period in days after deadline before marking as expired (defaults to 0)
-
-### Historical Tracking & Statistics
-- `HISTORY_FILE` — Path to historical tracking JSON (defaults to `./history.json`)
-- `STATS_FILE` — Path to statistics JSON output (defaults to `./docs/stats.json`)
-- `STATS_HTML_FILE` — Path to statistics HTML dashboard (defaults to `./docs/stats.html`)
-
-## Publish via GitHub Pages (Recommended)
-1. Use the included workflow to automatically generate and commit `docs/feed.xml` (or push the file manually)
-2. Enable Pages: Settings → Pages → Branch: `main`, Folder: `/docs`
-3. The feed will be available at `https://<your>.github.io/euglohscraper/feed.xml` and the viewer at `https://<your>.github.io/euglohscraper/`
-
-## Notification Setup
-
-### Email Notifications
-To enable email notifications, set the following environment variables:
 ```bash
-export EMAIL_ENABLED=true
-export EMAIL_FROM=your-email@gmail.com
-export EMAIL_TO=recipient@example.com
-export EMAIL_SMTP_HOST=smtp.gmail.com
-export EMAIL_SMTP_PORT=587
-export EMAIL_SMTP_USER=your-email@gmail.com
-export EMAIL_SMTP_PASSWORD=your-app-password
+# Copy the example configuration
+cp .env.example .env
+
+# Edit with your preferred settings
+nano .env
 ```
 
-For Gmail, you'll need to use an [App Password](https://support.google.com/accounts/answer/185833) instead of your regular password.
+### Key Configuration Options
 
-### Microsoft Teams Notifications
-To enable Teams notifications:
-1. In your Teams channel, click the three dots (⋯) → Connectors → Incoming Webhook
-2. Create a new webhook and copy the URL
-3. Set the environment variable:
-```bash
-export TEAMS_WEBHOOK_URL=https://your-org.webhook.office.com/webhookb2/...
-```
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `TARGET_URL` | URL to scrape | EUGLOH registrations page |
+| `EMAIL_ENABLED` | Enable email notifications | `false` |
+| `EMAIL_FROM` | Sender email address | — |
+| `EMAIL_TO` | Recipient email(s) | — |
+| `EMAIL_SMTP_HOST` | SMTP server | — |
+| `TEAMS_WEBHOOK_URL` | Teams webhook URL | — |
+| `WEBHOOK_URL` | Generic webhook URL | — |
+| `EXPIRED_DAYS_BUFFER` | Grace period after deadline | `0` |
 
-### GitHub Actions Setup
-To use notifications in GitHub Actions, add the secrets to your repository:
-1. Go to Settings → Secrets and variables → Actions
-2. Add the necessary secrets (e.g., `EMAIL_SMTP_PASSWORD`, `TEAMS_WEBHOOK_URL`)
-3. Update `.github/workflows/scrape-and-publish.yml` to include the environment variables
+See [`.env.example`](.env.example) for complete configuration options.
 
-## Web Viewer
-A lightweight viewer is provided in the `docs/` folder. It fetches `feed.xml` and renders a simple, mobile-friendly list of items.
+## 📊 Statistics Dashboard
 
-## Event Statistics Dashboard
 The scraper automatically generates a comprehensive statistics dashboard with interactive visualizations showing:
 
 ### Core Metrics
@@ -153,34 +148,127 @@ The scraper automatically generates a comprehensive statistics dashboard with in
 
 The statistics are automatically updated each time the scraper runs.
 
-## Expired Event Handling
-Events are automatically checked against their deadlines. When an event expires:
-- It's marked with `<category>expired</category>` in the RSS feed
-- Historical data records the expiration time and calculates registration duration
-- The event remains in the feed but is visually distinguished as expired
+## ⚙️ Configuration
 
-You can configure a grace period with `EXPIRED_DAYS_BUFFER` to keep events active for a few days after their deadline (e.g., set to `7` to keep events for a week after expiration).
+All configuration is done via environment variables. You can set them directly in your shell, or create a `.env` file.
 
-## Historical Tracking
-The scraper maintains a complete history of all events in `history.json`:
-- **First seen**: When the event was first discovered
-- **Last seen**: Last time the event was observed on the source page
-- **Expired at**: When the event's deadline passed
-- **Registration duration**: How long registration was open (in days)
+### Quick Setup
 
-This data powers the statistics dashboard and provides insights into EUGLOH event patterns.
+```bash
+# Copy the example configuration
+cp .env.example .env
 
-## Troubleshooting
-- If the Action doesn't publish, check Actions → the run logs for errors
-- If the feed is missing fields, copy a single course card (Inspect → copy outerHTML) and paste it in an issue — I can tune selectors
-- For email issues, verify SMTP credentials and check that less secure apps or app passwords are configured
+# Edit with your preferred settings
+nano .env
+```
 
-## Contributing & License
-- Pull requests welcome for small improvements (better parsing, tests, styling)
-- MIT-style: feel free to reuse
+### Key Configuration Options
 
-## Files
-- `check_events.py` — scraper + deduplication + feed writer + notifications
-- `requirements.txt` — Python dependencies
-- `.github/workflows/scrape-and-publish.yml` — scheduled GitHub Action (hourly)
-- `README.md` — this file
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `TARGET_URL` | URL to scrape | EUGLOH registrations page |
+| `EMAIL_ENABLED` | Enable email notifications | `false` |
+| `EMAIL_FROM` | Sender email address | — |
+| `EMAIL_TO` | Recipient email(s) | — |
+| `EMAIL_SMTP_HOST` | SMTP server | — |
+| `TEAMS_WEBHOOK_URL` | Teams webhook URL | — |
+| `WEBHOOK_URL` | Generic webhook URL | — |
+| `EXPIRED_DAYS_BUFFER` | Grace period after deadline | `0` |
+
+See [`.env.example`](.env.example) for complete configuration options.
+
+## 🚢 Deployment
+
+### GitHub Actions (Recommended)
+
+Automated execution with GitHub Actions:
+
+1. **Fork the repository**
+2. **Enable GitHub Pages**: Settings → Pages → Source: `main` branch, `/docs` folder
+3. **Configure secrets** (optional): Settings → Secrets → Actions
+4. **Workflow runs automatically** daily at 6 AM UTC
+
+Your feed will be available at: `https://YOUR-USERNAME.github.io/euglohscraper/feed.xml`
+
+### Other Deployment Options
+
+- **Local/Cron**: Run on your own machine or server
+- **Docker**: Containerized deployment
+- **Cloud Functions**: Serverless execution
+
+See the [Deployment Guide](docs/DEPLOYMENT.md) for detailed instructions.
+
+## 📊 Event Lifecycle
+
+The scraper tracks complete event lifecycles:
+
+1. **Discovery** — Event first appears with open registration
+2. **Active** — Event remains available for registration
+3. **Expiration** — Deadline passes (with optional grace period)
+4. **Tracking** — Duration and statistics recorded
+
+Events are marked with categories in the RSS feed:
+- `<category>new</category>` — Added in last 7 days
+- `<category>expired</category>` — Past deadline
+
+## 🧪 Testing
+
+Run the comprehensive test suite:
+
+```bash
+python test_check_events.py
+```
+
+Tests cover:
+- URL normalization
+- Event extraction
+- Deduplication logic
+- Feed generation
+- Date parsing
+- Expired event handling
+- Statistics calculation
+- Notification delivery
+
+## 🤝 Contributing
+
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+
+### How to Contribute
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Make your changes
+4. Run tests (`python test_check_events.py`)
+5. Commit your changes (`git commit -m 'Add amazing feature'`)
+6. Push to the branch (`git push origin feature/amazing-feature`)
+7. Open a Pull Request
+
+### Development Setup
+
+See the [Development Guide](docs/DEVELOPMENT.md) for detailed setup instructions.
+
+## 📝 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- Built for the [EUGLOH](https://www.eugloh.eu/) (European University Alliance for Global Health) community
+- Powered by [BeautifulSoup](https://www.crummy.com/software/BeautifulSoup/) for HTML parsing
+- Uses [Chart.js](https://www.chartjs.org/) for statistics visualizations
+
+## 📞 Support
+
+- **Documentation**: See [docs/](docs/) folder
+- **Issues**: [GitHub Issues](https://github.com/chrisilt/euglohscraper/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/chrisilt/euglohscraper/discussions)
+
+## 🔗 Related Projects
+
+Looking for similar tools:
+- [RSS Bridge](https://github.com/RSS-Bridge/rss-bridge) - RSS feed generator for various sites
+- [Huginn](https://github.com/huginn/huginn) - Multi-site monitoring and automation
+
+---
+
+Made with ❤️ for the EUGLOH community
