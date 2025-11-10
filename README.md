@@ -116,17 +116,40 @@ To use notifications in GitHub Actions, add the secrets to your repository:
 A lightweight viewer is provided in the `docs/` folder. It fetches `feed.xml` and renders a simple, mobile-friendly list of items.
 
 ## Event Statistics Dashboard
-The scraper automatically generates a statistics dashboard showing:
+The scraper automatically generates a comprehensive statistics dashboard with interactive visualizations showing:
+
+### Core Metrics
 - **Total events tracked** — All events discovered since tracking began
 - **Currently active** — Events with registration still open
 - **Total expired** — Events past their deadline
 - **New this week** — Events discovered in the last 7 days
-- **Average registration duration** — How long registrations typically remain open
-- **Upcoming deadlines** — Events expiring in the next 30 days
+- **New this month** — Events discovered in the last 30 days
+- **Expired this week** — Events that expired in the last 7 days
+- **Expired this month** — Events that expired in the last 30 days
 
-Access the dashboard at:
-- **HTML**: `https://<your>.github.io/euglohscraper/stats.html`
-- **JSON API**: `https://<your>.github.io/euglohscraper/stats.json`
+### Registration Duration Analysis
+- **Average duration** — How long registrations typically remain open
+- **Min/Max/Median** — Range of registration periods
+- **Distribution stats** — Detailed breakdown of registration windows
+
+### Event Velocity Metrics
+- **Events per week** — Rate of new event discovery
+- **Events per month** — Monthly event discovery rate
+- **Tracking period** — Total days of data collection
+
+### Active Event Insights
+- **Average age** — How long current events have been active
+- **Age distribution** — Min/Max/Median age of active events
+- **Long-running events** — Events active for more than 60 days
+
+### Timeline Features
+- **Upcoming deadlines** — Events expiring in the next 30 days
+- **Recently expired** — Events that expired in the last 7 days (with duration)
+- **Monthly trends** — Interactive chart showing event discovery rate by month (last 12 months)
+
+### Dashboard Access
+- **HTML**: `https://<your>.github.io/euglohscraper/stats.html` — Interactive dashboard with Chart.js visualizations
+- **JSON API**: `https://<your>.github.io/euglohscraper/stats.json` — Raw data for custom analysis
 
 The statistics are automatically updated each time the scraper runs.
 
