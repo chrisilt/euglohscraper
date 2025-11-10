@@ -614,6 +614,7 @@ def save_statistics(stats: Dict, json_path: str, html_path: str):
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EUGLOH Event Statistics</title>
+    <link rel="stylesheet" href="style.css">
     <style>
         .stats-container {{
             max-width: 1200px;
@@ -914,6 +915,110 @@ def update_feed_timestamp(feed_file: str):
         print(f"Failed to update feed timestamp: {e}")
 
 
+def rebuild_history_from_feed(feed_file: str = None, history_file: str = HISTORY_FILE):
+    """
+    Rebuild history.json from existing feed.xml.
+    This is useful when history.json is out of sync with the feed.
+    """
+    from xml.etree import ElementTree as ET
+    
+    # Try both locations for feed file
+    if feed_file is None:
+        if os.path.exists(FEED_FILE):
+            feed_file = FEED_FILE
+        elif os.path.exists("./docs/feed.xml"):
+            feed_file = "./docs/feed.xml"
+        else:
+            print(f"Feed file not found at {FEED_FILE} or ./docs/feed.xml")
+            return
+    
+    if not os.path.exists(feed_file):
+        print(f"Feed file {feed_file} not found")
+        return
+    
+    print(f"Rebuilding history from {feed_file}...")
+    
+    # Parse the feed
+    with open(feed_file, 'r', encoding='utf-8') as f:
+        content = f.read()
+    
+    try:
+        root = ET.fromstring(content)
+    except Exception as e:
+        print(f"Failed to parse feed XML: {e}")
+        return
+    
+    # Initialize history
+    history = {'events': {}}
+    
+    # Process each item in the feed
+    items = root.findall('.//item')
+    print(f"Found {len(items)} items in feed")
+    
+    for item in items:
+        # Extract event information
+        guid_elem = item.find('guid')
+        if guid_elem is None or not guid_elem.text:
+            continue
+        
+        event_id = guid_elem.text
+        title = item.find('title').text if item.find('title') is not None else ''
+        link = item.find('link').text if item.find('link') is not None else event_id
+        
+        # Extract deadline from description
+        description_elem = item.find('description')
+        deadline = ''
+        if description_elem is not None and description_elem.text:
+            desc_text = description_elem.text
+            # Try to extract deadline from description
+            import re
+            deadline_match = re.search(r'Deadline:\s*(.+?)(?:\s*$|(?=\n))', desc_text, re.IGNORECASE)
+            if deadline_match:
+                deadline = deadline_match.group(1).strip()
+        
+        # Try to get pubDate as a fallback timestamp
+        pubdate_elem = item.find('pubDate')
+        first_seen_timestamp = None
+        if pubdate_elem is not None and pubdate_elem.text:
+            try:
+                from email.utils import parsedate_to_datetime
+                pubdate_dt = parsedate_to_datetime(pubdate_elem.text)
+                first_seen_timestamp = int(pubdate_dt.timestamp())
+            except Exception:
+                pass
+        
+        # Use current time if we couldn't parse pubDate
+        if first_seen_timestamp is None:
+            first_seen_timestamp = int(time.time())
+        
+        # Check if event is expired
+        is_expired = is_event_expired(deadline, EXPIRED_DAYS_BUFFER) if deadline else False
+        
+        # Add to history
+        history['events'][event_id] = {
+            'id': event_id,
+            'title': title,
+            'link': link,
+            'deadline': deadline,
+            'first_seen': first_seen_timestamp,
+            'last_seen': first_seen_timestamp,
+            'expired_at': first_seen_timestamp if is_expired else None,
+            'registration_duration_days': None,
+        }
+        
+        print(f"  Added: {title[:60]}... (expired: {is_expired})")
+    
+    # Save the rebuilt history
+    save_history(history_file, history)
+    print(f"Saved {len(history['events'])} events to {history_file}")
+    
+    # Regenerate statistics
+    state = load_state(STATE_FILE)
+    stats = generate_statistics(history, state)
+    save_statistics(stats, STATS_FILE, STATS_HTML_FILE)
+    print(f"Updated statistics in {STATS_FILE} and {STATS_HTML_FILE}")
+
+
 # ---- Main ----
 def main():
     state = load_state(STATE_FILE)
@@ -988,4 +1093,10 @@ def main():
     print(f"Saved state: {len(state['seen_ids'])} seen ids")
 
 if __name__ == "__main__":
-    main()
+    import sys
+    
+    # Check for rebuild command
+    if len(sys.argv) > 1 and sys.argv[1] == "--rebuild-history":
+        rebuild_history_from_feed()
+    else:
+        main()

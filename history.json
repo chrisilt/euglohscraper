@@ -1,54 +1,224 @@
 {
   "events": {
-    "https://intranet.eugloh.eu/events/active-event-1": {
-      "id": "https://intranet.eugloh.eu/events/active-event-1",
-      "title": "Introduction to Global Health Research",
-      "link": "https://intranet.eugloh.eu/events/active-event-1",
-      "deadline": "15 Dec 2025 23:59",
-      "first_seen": 1762157722,
-      "last_seen": 1762762522,
+    "https://intranet.eugloh.eu/application/form/EUG2_T2_1_0060": {
+      "id": "https://intranet.eugloh.eu/application/form/EUG2_T2_1_0060",
+      "title": "EUGLOH International Certificate",
+      "link": "https://intranet.eugloh.eu/application/form/EUG2_T2_1_0060",
+      "deadline": "31 Dec 2026 23:59",
+      "first_seen": 1762702330,
+      "last_seen": 1762702330,
       "expired_at": null,
       "registration_duration_days": null
     },
-    "https://intranet.eugloh.eu/events/active-event-2": {
-      "id": "https://intranet.eugloh.eu/events/active-event-2",
-      "title": "EUGLOH Soft Skills Workshop",
-      "link": "https://intranet.eugloh.eu/events/active-event-2",
-      "deadline": "20 Nov 2025 18:00",
-      "first_seen": 1761984922,
-      "last_seen": 1762762522,
+    "https://intranet.eugloh.eu/application/form/EUG2_T2_1_0129": {
+      "id": "https://intranet.eugloh.eu/application/form/EUG2_T2_1_0129",
+      "title": "EUGLOH Certificate of Advanced Studies in Global Health 2026",
+      "link": "https://intranet.eugloh.eu/application/form/EUG2_T2_1_0129",
+      "deadline": "31 Jan 2026 23:59",
+      "first_seen": 1762702330,
+      "last_seen": 1762702330,
       "expired_at": null,
       "registration_duration_days": null
     },
-    "https://intranet.eugloh.eu/events/active-event-3": {
-      "id": "https://intranet.eugloh.eu/events/active-event-3",
-      "title": "Data Science for Health Applications",
-      "link": "https://intranet.eugloh.eu/events/active-event-3",
+    "https://intranet.eugloh.eu/events/call-for-speakers-eugloh-conference-on-pedagogical-development": {
+      "id": "https://intranet.eugloh.eu/events/call-for-speakers-eugloh-conference-on-pedagogical-development",
+      "title": "Call for Speakers: EUGLOH Conference on Pedagogical Development",
+      "link": "https://intranet.eugloh.eu/events/call-for-speakers-eugloh-conference-on-pedagogical-development",
+      "deadline": "11 Jan 2026 23:59",
+      "first_seen": 1762702330,
+      "last_seen": 1762702330,
+      "expired_at": null,
+      "registration_duration_days": null
+    },
+    "https://intranet.eugloh.eu/application/form/EUG2_T2_2_0141": {
+      "id": "https://intranet.eugloh.eu/application/form/EUG2_T2_2_0141",
+      "title": "ABC Learning Design in EUGLOH 2nd Edition",
+      "link": "https://intranet.eugloh.eu/application/form/EUG2_T2_2_0141",
+      "deadline": "5 Jan 2026 23:59",
+      "first_seen": 1762702330,
+      "last_seen": 1762702330,
+      "expired_at": null,
+      "registration_duration_days": null
+    },
+    "https://intranet.eugloh.eu/application/form/EUG2_T2_1_0128": {
+      "id": "https://intranet.eugloh.eu/application/form/EUG2_T2_1_0128",
+      "title": "Introduction to Outbreak Investigation – Infection Prevention and Control Measures 2026",
+      "link": "https://intranet.eugloh.eu/application/form/EUG2_T2_1_0128",
+      "deadline": "8 Dec 2025 23:59",
+      "first_seen": 1762702330,
+      "last_seen": 1762702330,
+      "expired_at": null,
+      "registration_duration_days": null
+    },
+    "https://intranet.eugloh.eu/events/emotional-intelligence-resilience-eugloh-soft-skills-seminar-series-oct-dec-2025-edition": {
+      "id": "https://intranet.eugloh.eu/events/emotional-intelligence-resilience-eugloh-soft-skills-seminar-series-oct-dec-2025-edition",
+      "title": "Emotional Intelligence & Resilience | EUGLOH Soft Skills Seminar Series (Oct–Dec 2025 Edition)",
+      "link": "https://intranet.eugloh.eu/events/emotional-intelligence-resilience-eugloh-soft-skills-seminar-series-oct-dec-2025-edition",
+      "deadline": "2 Dec 2025 23:59",
+      "first_seen": 1762702330,
+      "last_seen": 1762702330,
+      "expired_at": null,
+      "registration_duration_days": null
+    },
+    "https://intranet.eugloh.eu/application/form/EUG2_T2_1_0135": {
+      "id": "https://intranet.eugloh.eu/application/form/EUG2_T2_1_0135",
+      "title": "Biotechnology in Defence and Security",
+      "link": "https://intranet.eugloh.eu/application/form/EUG2_T2_1_0135",
+      "deadline": "1 Dec 2025 23:59",
+      "first_seen": 1762702330,
+      "last_seen": 1762702330,
+      "expired_at": null,
+      "registration_duration_days": null
+    },
+    "https://intranet.eugloh.eu/application/form/EUG2_T2_1_0113": {
+      "id": "https://intranet.eugloh.eu/application/form/EUG2_T2_1_0113",
+      "title": "An introduction to Software-Defined Networking",
+      "link": "https://intranet.eugloh.eu/application/form/EUG2_T2_1_0113",
+      "deadline": "1 Dec 2025 23:59",
+      "first_seen": 1762702330,
+      "last_seen": 1762702330,
+      "expired_at": null,
+      "registration_duration_days": null
+    },
+    "https://intranet.eugloh.eu/events/spotlight-on-education-why-educational-films-matter": {
+      "id": "https://intranet.eugloh.eu/events/spotlight-on-education-why-educational-films-matter",
+      "title": "Spotlight on Education: Why Educational Films Matter",
+      "link": "https://intranet.eugloh.eu/events/spotlight-on-education-why-educational-films-matter",
+      "deadline": "1 Dec 2025 08:00",
+      "first_seen": 1762702330,
+      "last_seen": 1762702330,
+      "expired_at": null,
+      "registration_duration_days": null
+    },
+    "https://intranet.eugloh.eu/application/form/EUG2_T4_3_0143": {
+      "id": "https://intranet.eugloh.eu/application/form/EUG2_T4_3_0143",
+      "title": "EUGLOH Living Lab - Data and Decision-Making",
+      "link": "https://intranet.eugloh.eu/application/form/EUG2_T4_3_0143",
+      "deadline": "30 Nov 2025 23:59",
+      "first_seen": 1762702330,
+      "last_seen": 1762702330,
+      "expired_at": null,
+      "registration_duration_days": null
+    },
+    "https://intranet.eugloh.eu/application/form/EUG2_T4_2_0140": {
+      "id": "https://intranet.eugloh.eu/application/form/EUG2_T4_2_0140",
+      "title": "EUGLOH LIVING LAB ‒ Making an Impact! Skills for Career Paths in and beyond Academia",
+      "link": "https://intranet.eugloh.eu/application/form/EUG2_T4_2_0140",
+      "deadline": "30 Nov 2025 23:59",
+      "first_seen": 1762702330,
+      "last_seen": 1762702330,
+      "expired_at": null,
+      "registration_duration_days": null
+    },
+    "https://intranet.eugloh.eu/events/empowering-education-through-peer-learning": {
+      "id": "https://intranet.eugloh.eu/events/empowering-education-through-peer-learning",
+      "title": "Empowering Education Through Peer Learning",
+      "link": "https://intranet.eugloh.eu/events/empowering-education-through-peer-learning",
+      "deadline": "26 Nov 2025 12:00",
+      "first_seen": 1762702330,
+      "last_seen": 1762702330,
+      "expired_at": null,
+      "registration_duration_days": null
+    },
+    "https://intranet.eugloh.eu/events/eugloh-soft-skills-seminar-series-teamwork-and-collaboration": {
+      "id": "https://intranet.eugloh.eu/events/eugloh-soft-skills-seminar-series-teamwork-and-collaboration",
+      "title": "EUGLOH Soft Skills Seminar Series - Teamwork and collaboration",
+      "link": "https://intranet.eugloh.eu/events/eugloh-soft-skills-seminar-series-teamwork-and-collaboration",
       "deadline": "25 Nov 2025 23:59",
-      "first_seen": 1762071322,
-      "last_seen": 1762762522,
+      "first_seen": 1762702330,
+      "last_seen": 1762702330,
       "expired_at": null,
       "registration_duration_days": null
     },
-    "https://intranet.eugloh.eu/events/expired-event-1": {
-      "id": "https://intranet.eugloh.eu/events/expired-event-1",
-      "title": "Past Workshop on Public Health",
-      "link": "https://intranet.eugloh.eu/events/expired-event-1",
-      "deadline": "1 Oct 2025 23:59",
-      "first_seen": 1757578522,
-      "last_seen": 1760170522,
-      "expired_at": 1760170522,
-      "registration_duration_days": 30.5
+    "https://intranet.eugloh.eu/events/eugloh-unites-webinar-series-on-gender-equality-and-gender-based-violence-2nd-edition": {
+      "id": "https://intranet.eugloh.eu/events/eugloh-unites-webinar-series-on-gender-equality-and-gender-based-violence-2nd-edition",
+      "title": "EUGLOH UniTes! Webinar Series on Gender Equality and Gender-Based Violence (2nd Edition)",
+      "link": "https://intranet.eugloh.eu/events/eugloh-unites-webinar-series-on-gender-equality-and-gender-based-violence-2nd-edition",
+      "deadline": "25 Nov 2025",
+      "first_seen": 1762702330,
+      "last_seen": 1762702330,
+      "expired_at": null,
+      "registration_duration_days": null
     },
-    "https://intranet.eugloh.eu/events/expired-event-2": {
-      "id": "https://intranet.eugloh.eu/events/expired-event-2",
-      "title": "Summer School on Epidemiology",
-      "link": "https://intranet.eugloh.eu/events/expired-event-2",
-      "deadline": "15 Sep 2025 23:59",
-      "first_seen": 1756714522,
-      "last_seen": 1759738522,
-      "expired_at": 1759738522,
-      "registration_duration_days": 45.2
+    "https://intranet.eugloh.eu/application/form/EUG2_T6_3_0138": {
+      "id": "https://intranet.eugloh.eu/application/form/EUG2_T6_3_0138",
+      "title": "Bridging Cultures, Building Capacity: Call for Experts to Develop a Train-the-Trainer Manuel on Culturally Sensitive Outreach for Underserved Communities",
+      "link": "https://intranet.eugloh.eu/application/form/EUG2_T6_3_0138",
+      "deadline": "21 Nov 2025 23:59",
+      "first_seen": 1762702330,
+      "last_seen": 1762702330,
+      "expired_at": null,
+      "registration_duration_days": null
+    },
+    "https://intranet.eugloh.eu/events/eugloh-campus-life-virtual-fair-discover-universite-paris-saclay": {
+      "id": "https://intranet.eugloh.eu/events/eugloh-campus-life-virtual-fair-discover-universite-paris-saclay",
+      "title": "EUGLOH Campus Life Virtual Fair: Discover Université Paris-Saclay",
+      "link": "https://intranet.eugloh.eu/events/eugloh-campus-life-virtual-fair-discover-universite-paris-saclay",
+      "deadline": "19 Nov 2025",
+      "first_seen": 1762702330,
+      "last_seen": 1762702330,
+      "expired_at": null,
+      "registration_duration_days": null
+    },
+    "https://intranet.eugloh.eu/events/eugloh-certificate-of-advanced-studies-in-global-health-2026-first-information-session": {
+      "id": "https://intranet.eugloh.eu/events/eugloh-certificate-of-advanced-studies-in-global-health-2026-first-information-session",
+      "title": "EUGLOH Certificate of Advanced Studies in Global Health 2026 - First Information Session",
+      "link": "https://intranet.eugloh.eu/events/eugloh-certificate-of-advanced-studies-in-global-health-2026-first-information-session",
+      "deadline": "18 Nov 2025",
+      "first_seen": 1762702330,
+      "last_seen": 1762702330,
+      "expired_at": null,
+      "registration_duration_days": null
+    },
+    "https://intranet.eugloh.eu/application/form/EUG2_T2_1_0137": {
+      "id": "https://intranet.eugloh.eu/application/form/EUG2_T2_1_0137",
+      "title": "Sharing Care, Shaping Futures - Nursing in Europe",
+      "link": "https://intranet.eugloh.eu/application/form/EUG2_T2_1_0137",
+      "deadline": "15 Nov 2025 23:59",
+      "first_seen": 1762702330,
+      "last_seen": 1762702330,
+      "expired_at": null,
+      "registration_duration_days": null
+    },
+    "https://intranet.eugloh.eu/application/form/EUG2_T3_1_0136": {
+      "id": "https://intranet.eugloh.eu/application/form/EUG2_T3_1_0136",
+      "title": "From Food to Health",
+      "link": "https://intranet.eugloh.eu/application/form/EUG2_T3_1_0136",
+      "deadline": "14 Nov 2025 23:59",
+      "first_seen": 1762702330,
+      "last_seen": 1762702330,
+      "expired_at": null,
+      "registration_duration_days": null
+    },
+    "https://intranet.eugloh.eu/application/form/EUG2_T2_1_0124": {
+      "id": "https://intranet.eugloh.eu/application/form/EUG2_T2_1_0124",
+      "title": "Digital Twins in Supply Chain Logistics: Practical Applications through Simulators - 2nd edition",
+      "link": "https://intranet.eugloh.eu/application/form/EUG2_T2_1_0124",
+      "deadline": "14 Nov 2025 23:59",
+      "first_seen": 1762702330,
+      "last_seen": 1762702330,
+      "expired_at": null,
+      "registration_duration_days": null
+    },
+    "https://intranet.eugloh.eu/events/effective-communication-in-the-workplace-eugloh-soft-skills-seminar-series-oct-dec-2025-edition": {
+      "id": "https://intranet.eugloh.eu/events/effective-communication-in-the-workplace-eugloh-soft-skills-seminar-series-oct-dec-2025-edition",
+      "title": "Effective Communication in the Workplace | EUGLOH Soft Skills Seminar Series (Oct–Dec 2025 Edition)",
+      "link": "https://intranet.eugloh.eu/events/effective-communication-in-the-workplace-eugloh-soft-skills-seminar-series-oct-dec-2025-edition",
+      "deadline": "11 Nov 2025 23:59",
+      "first_seen": 1762702330,
+      "last_seen": 1762702330,
+      "expired_at": null,
+      "registration_duration_days": null
+    },
+    "https://intranet.eugloh.eu/application/form/EUG2_T5_4_0139": {
+      "id": "https://intranet.eugloh.eu/application/form/EUG2_T5_4_0139",
+      "title": "EUGLOH Workshop on Physical Activity, Health, and Well-Being",
+      "link": "https://intranet.eugloh.eu/application/form/EUG2_T5_4_0139",
+      "deadline": "9 Nov 2025 23:59",
+      "first_seen": 1762702330,
+      "last_seen": 1762702330,
+      "expired_at": 1762702330,
+      "registration_duration_days": null
     }
   }
 }
