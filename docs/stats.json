@@ -1,22 +1,70 @@
 {
-  "generated_at": 1762762533,
-  "total_events_tracked": 5,
-  "currently_active": 3,
-  "total_expired": 2,
-  "new_this_week": 0,
+  "generated_at": 1762765065,
+  "total_events_tracked": 22,
+  "currently_active": 21,
+  "total_expired": 1,
+  "new_this_week": 22,
   "upcoming_deadlines": [
     {
-      "title": "EUGLOH Soft Skills Workshop",
-      "deadline": "20 Nov 2025 18:00",
-      "days_remaining": 10.4,
-      "link": "https://intranet.eugloh.eu/events/active-event-2"
+      "title": "Effective Communication in the Workplace | EUGLOH Soft Skills Seminar Series (Oct–Dec 2025 Edition)",
+      "deadline": "11 Nov 2025 23:59",
+      "days_remaining": 1.6,
+      "link": "https://intranet.eugloh.eu/events/effective-communication-in-the-workplace-eugloh-soft-skills-seminar-series-oct-dec-2025-edition"
     },
     {
-      "title": "Data Science for Health Applications",
+      "title": "From Food to Health",
+      "deadline": "14 Nov 2025 23:59",
+      "days_remaining": 4.6,
+      "link": "https://intranet.eugloh.eu/application/form/EUG2_T3_1_0136"
+    },
+    {
+      "title": "Digital Twins in Supply Chain Logistics: Practical Applications through Simulators - 2nd edition",
+      "deadline": "14 Nov 2025 23:59",
+      "days_remaining": 4.6,
+      "link": "https://intranet.eugloh.eu/application/form/EUG2_T2_1_0124"
+    },
+    {
+      "title": "Sharing Care, Shaping Futures - Nursing in Europe",
+      "deadline": "15 Nov 2025 23:59",
+      "days_remaining": 5.6,
+      "link": "https://intranet.eugloh.eu/application/form/EUG2_T2_1_0137"
+    },
+    {
+      "title": "EUGLOH Certificate of Advanced Studies in Global Health 2026 - First Information Session",
+      "deadline": "18 Nov 2025",
+      "days_remaining": 8.6,
+      "link": "https://intranet.eugloh.eu/events/eugloh-certificate-of-advanced-studies-in-global-health-2026-first-information-session"
+    },
+    {
+      "title": "EUGLOH Campus Life Virtual Fair: Discover Université Paris-Saclay",
+      "deadline": "19 Nov 2025",
+      "days_remaining": 9.6,
+      "link": "https://intranet.eugloh.eu/events/eugloh-campus-life-virtual-fair-discover-universite-paris-saclay"
+    },
+    {
+      "title": "Bridging Cultures, Building Capacity: Call for Experts to Develop a Train-the-Trainer Manuel on Culturally Sensitive Outreach for Underserved Communities",
+      "deadline": "21 Nov 2025 23:59",
+      "days_remaining": 11.6,
+      "link": "https://intranet.eugloh.eu/application/form/EUG2_T6_3_0138"
+    },
+    {
+      "title": "EUGLOH Soft Skills Seminar Series - Teamwork and collaboration",
       "deadline": "25 Nov 2025 23:59",
-      "days_remaining": 15.7,
-      "link": "https://intranet.eugloh.eu/events/active-event-3"
+      "days_remaining": 15.6,
+      "link": "https://intranet.eugloh.eu/events/eugloh-soft-skills-seminar-series-teamwork-and-collaboration"
+    },
+    {
+      "title": "EUGLOH UniTes! Webinar Series on Gender Equality and Gender-Based Violence (2nd Edition)",
+      "deadline": "25 Nov 2025",
+      "days_remaining": 15.6,
+      "link": "https://intranet.eugloh.eu/events/eugloh-unites-webinar-series-on-gender-equality-and-gender-based-violence-2nd-edition"
+    },
+    {
+      "title": "Empowering Education Through Peer Learning",
+      "deadline": "26 Nov 2025 12:00",
+      "days_remaining": 16.1,
+      "link": "https://intranet.eugloh.eu/events/empowering-education-through-peer-learning"
     }
   ],
-  "average_registration_duration_days": 37.9
+  "average_registration_duration_days": null
 }
