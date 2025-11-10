@@ -653,16 +653,25 @@ def generate_statistics(history: Dict, state: Dict) -> Dict:
         }
     
     # Calculate event velocity (events per week/month)
+    # Only calculate if we have at least 7 days of tracking data to avoid misleading extrapolations
     if history.get("events"):
         all_first_seen = [e.get("first_seen", 0) for e in history["events"].values() if e.get("first_seen", 0) > 0]
         if all_first_seen:
             oldest_event = min(all_first_seen)
             total_days = (current_time - oldest_event) / (24 * 60 * 60)
-            if total_days > 0:
+            if total_days >= 7:  # Require at least 7 days of data
                 stats["event_velocity"] = {
                     "events_per_week": round(len(history["events"]) / (total_days / 7), 2),
                     "events_per_month": round(len(history["events"]) / (total_days / 30), 2),
                     "tracking_days": round(total_days, 1)
+                }
+            else:
+                # Not enough data yet - provide a placeholder message
+                stats["event_velocity"] = {
+                    "events_per_week": None,
+                    "events_per_month": None,
+                    "tracking_days": round(total_days, 1),
+                    "insufficient_data": True
                 }
     
     # Sort and limit lists
@@ -778,7 +787,22 @@ def save_statistics(stats: Dict, json_path: str, html_path: str):
     velocity_html = ""
     if stats.get("event_velocity"):
         ev = stats["event_velocity"]
-        velocity_html = f"""
+        if ev.get("insufficient_data"):
+            # Not enough data yet - show friendly message
+            velocity_html = f"""
+        <h2>⚡ Event Velocity</h2>
+        <div class="stat-card" style="text-align: center; border-left: 4px solid #ffc107;">
+            <p style="margin: 0; color: #856404; font-size: 1.1em;">
+                📊 Collecting data... ({ev['tracking_days']} days tracked)
+            </p>
+            <p style="margin: 10px 0 0 0; color: #6c757d; font-size: 0.9em;">
+                Event velocity metrics will be available after 7 days of tracking.
+            </p>
+        </div>
+        """
+        else:
+            # Sufficient data - show velocity metrics
+            velocity_html = f"""
         <h2>⚡ Event Velocity</h2>
         <div class="stats-grid">
             <div class="stat-card">

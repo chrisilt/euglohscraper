@@ -1,5 +1,5 @@
 {
-  "generated_at": 1762771938,
+  "generated_at": 1762772637,
   "total_events_tracked": 22,
   "currently_active": 21,
   "total_expired": 1,
@@ -88,9 +88,10 @@
     }
   ],
   "event_velocity": {
-    "events_per_week": 191.15,
-    "events_per_month": 819.21,
-    "tracking_days": 0.8
+    "events_per_week": null,
+    "events_per_month": null,
+    "tracking_days": 0.8,
+    "insufficient_data": true
   },
   "active_event_ages": {
     "min": 0.8,

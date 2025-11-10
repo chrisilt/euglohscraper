@@ -839,6 +839,41 @@ class TestStatistics(unittest.TestCase):
         self.assertGreater(velocity['events_per_week'], 0)
         self.assertGreater(velocity['events_per_month'], 0)
     
+    def test_event_velocity_insufficient_data(self):
+        """Test that velocity metrics show insufficient data message when tracking < 7 days."""
+        from check_events import generate_statistics
+        import time
+        
+        current_time = time.time()
+        days_2 = 2 * 24 * 60 * 60
+        
+        # Create 10 events all discovered within last 2 days
+        history = {'events': {}}
+        for i in range(10):
+            event_id = f'event{i}'
+            history['events'][event_id] = {
+                'id': event_id,
+                'title': f'Event {i}',
+                'deadline': '31 Dec 2030 23:59',
+                'first_seen': int(current_time - days_2),
+                'last_seen': int(current_time),
+                'expired_at': None,
+            }
+        
+        state = {'seen_ids': list(history['events'].keys())}
+        stats = generate_statistics(history, state)
+        
+        self.assertIn('event_velocity', stats)
+        velocity = stats['event_velocity']
+        # Should have insufficient_data flag
+        self.assertTrue(velocity.get('insufficient_data', False))
+        # Events per week/month should be None
+        self.assertIsNone(velocity['events_per_week'])
+        self.assertIsNone(velocity['events_per_month'])
+        # But tracking days should still be reported
+        self.assertIsNotNone(velocity['tracking_days'])
+        self.assertLess(velocity['tracking_days'], 7)
+    
     def test_long_running_events_detection(self):
         """Test detection of long-running events (active > 60 days)."""
         from check_events import generate_statistics
