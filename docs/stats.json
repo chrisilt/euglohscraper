@@ -1,70 +1,178 @@
 {
-  "generated_at": 1762765603,
-  "total_events_tracked": 22,
-  "currently_active": 21,
-  "total_expired": 1,
-  "new_this_week": 22,
+  "generated_at": 1762770482,
+  "total_events_tracked": 50,
+  "currently_active": 15,
+  "total_expired": 35,
+  "new_this_week": 3,
   "upcoming_deadlines": [
     {
-      "title": "Effective Communication in the Workplace | EUGLOH Soft Skills Seminar Series (Oct–Dec 2025 Edition)",
-      "deadline": "11 Nov 2025 23:59",
-      "days_remaining": 1.6,
-      "link": "https://intranet.eugloh.eu/events/effective-communication-in-the-workplace-eugloh-soft-skills-seminar-series-oct-dec-2025-edition"
+      "title": "Advanced Python for Data Science",
+      "deadline": "13 Nov 2025 10:28",
+      "days_remaining": 3.0,
+      "link": "https://intranet.eugloh.eu/events/event1"
     },
     {
-      "title": "From Food to Health",
-      "deadline": "14 Nov 2025 23:59",
-      "days_remaining": 4.6,
-      "link": "https://intranet.eugloh.eu/application/form/EUG2_T3_1_0136"
+      "title": "Machine Learning Workshop",
+      "deadline": "17 Nov 2025 10:28",
+      "days_remaining": 7.0,
+      "link": "https://intranet.eugloh.eu/events/event2"
     },
     {
-      "title": "Digital Twins in Supply Chain Logistics: Practical Applications through Simulators - 2nd edition",
-      "deadline": "14 Nov 2025 23:59",
-      "days_remaining": 4.6,
-      "link": "https://intranet.eugloh.eu/application/form/EUG2_T2_1_0124"
+      "title": "Global Health Policy Seminar",
+      "deadline": "22 Nov 2025 10:28",
+      "days_remaining": 12.0,
+      "link": "https://intranet.eugloh.eu/events/event3"
     },
     {
-      "title": "Sharing Care, Shaping Futures - Nursing in Europe",
-      "deadline": "15 Nov 2025 23:59",
-      "days_remaining": 5.6,
-      "link": "https://intranet.eugloh.eu/application/form/EUG2_T2_1_0137"
+      "title": "Research Methods in Public Health",
+      "deadline": "28 Nov 2025 10:28",
+      "days_remaining": 18.0,
+      "link": "https://intranet.eugloh.eu/events/event4"
     },
     {
-      "title": "EUGLOH Certificate of Advanced Studies in Global Health 2026 - First Information Session",
-      "deadline": "18 Nov 2025",
-      "days_remaining": 8.6,
-      "link": "https://intranet.eugloh.eu/events/eugloh-certificate-of-advanced-studies-in-global-health-2026-first-information-session"
+      "title": "Digital Transformation in Healthcare",
+      "deadline": "02 Dec 2025 10:28",
+      "days_remaining": 22.0,
+      "link": "https://intranet.eugloh.eu/events/event5"
     },
     {
-      "title": "EUGLOH Campus Life Virtual Fair: Discover Université Paris-Saclay",
-      "deadline": "19 Nov 2025",
-      "days_remaining": 9.6,
-      "link": "https://intranet.eugloh.eu/events/eugloh-campus-life-virtual-fair-discover-universite-paris-saclay"
+      "title": "AI Ethics and Governance",
+      "deadline": "08 Dec 2025 10:28",
+      "days_remaining": 28.0,
+      "link": "https://intranet.eugloh.eu/events/event6"
     },
     {
-      "title": "Bridging Cultures, Building Capacity: Call for Experts to Develop a Train-the-Trainer Manuel on Culturally Sensitive Outreach for Underserved Communities",
-      "deadline": "21 Nov 2025 23:59",
-      "days_remaining": 11.6,
-      "link": "https://intranet.eugloh.eu/application/form/EUG2_T6_3_0138"
+      "title": "Event from October 2025 #1",
+      "deadline": "10 Dec 2025 10:28",
+      "days_remaining": 30.0,
+      "link": "https://intranet.eugloh.eu/events/trend_1_0"
     },
     {
-      "title": "EUGLOH Soft Skills Seminar Series - Teamwork and collaboration",
-      "deadline": "25 Nov 2025 23:59",
-      "days_remaining": 15.6,
-      "link": "https://intranet.eugloh.eu/events/eugloh-soft-skills-seminar-series-teamwork-and-collaboration"
-    },
-    {
-      "title": "EUGLOH UniTes! Webinar Series on Gender Equality and Gender-Based Violence (2nd Edition)",
-      "deadline": "25 Nov 2025",
-      "days_remaining": 15.6,
-      "link": "https://intranet.eugloh.eu/events/eugloh-unites-webinar-series-on-gender-equality-and-gender-based-violence-2nd-edition"
-    },
-    {
-      "title": "Empowering Education Through Peer Learning",
-      "deadline": "26 Nov 2025 12:00",
-      "days_remaining": 16.1,
-      "link": "https://intranet.eugloh.eu/events/empowering-education-through-peer-learning"
+      "title": "Event from October 2025 #2",
+      "deadline": "10 Dec 2025 10:28",
+      "days_remaining": 30.0,
+      "link": "https://intranet.eugloh.eu/events/trend_1_1"
     }
   ],
-  "average_registration_duration_days": null
+  "average_registration_duration_days": 42.0,
+  "new_this_month": 8,
+  "expired_this_week": 3,
+  "expired_this_month": 4,
+  "registration_duration_stats": {
+    "min": -20.0,
+    "max": 75.0,
+    "median": 45.0,
+    "average": 42.0,
+    "total_completed": 22
+  },
+  "recently_expired": [
+    {
+      "title": "Summer School in Epidemiology",
+      "deadline": "08 Nov 2025 10:28",
+      "expired_at": 1762597682,
+      "link": "https://intranet.eugloh.eu/events/event11",
+      "registration_duration_days": 43.0
+    },
+    {
+      "title": "Workshop on Statistical Methods",
+      "deadline": "06 Nov 2025 10:28",
+      "expired_at": 1762424882,
+      "link": "https://intranet.eugloh.eu/events/event12",
+      "registration_duration_days": 26.0
+    },
+    {
+      "title": "Climate Change and Health Webinar",
+      "deadline": "04 Nov 2025 10:28",
+      "expired_at": 1762252082,
+      "link": "https://intranet.eugloh.eu/events/event13",
+      "registration_duration_days": 19.0
+    }
+  ],
+  "long_running_events": [
+    {
+      "title": "Research Collaboration Network",
+      "deadline": "09 May 2026 10:28",
+      "days_active": 100.0,
+      "link": "https://intranet.eugloh.eu/events/event9"
+    },
+    {
+      "title": "Academic Writing Course",
+      "deadline": "10 Mar 2026 10:28",
+      "days_active": 90.0,
+      "link": "https://intranet.eugloh.eu/events/event8"
+    },
+    {
+      "title": "Sustainability Leadership Program",
+      "deadline": "29 May 2026 10:28",
+      "days_active": 85.0,
+      "link": "https://intranet.eugloh.eu/events/event10"
+    },
+    {
+      "title": "EUGLOH International Certificate Program",
+      "deadline": "09 Apr 2026 10:28",
+      "days_active": 75.0,
+      "link": "https://intranet.eugloh.eu/events/event7"
+    }
+  ],
+  "monthly_trends": [
+    {
+      "month": "2024-12",
+      "events_added": 4
+    },
+    {
+      "month": "2025-01",
+      "events_added": 3
+    },
+    {
+      "month": "2025-02",
+      "events_added": 2
+    },
+    {
+      "month": "2025-03",
+      "events_added": 1
+    },
+    {
+      "month": "2025-04",
+      "events_added": 4
+    },
+    {
+      "month": "2025-05",
+      "events_added": 3
+    },
+    {
+      "month": "2025-06",
+      "events_added": 2
+    },
+    {
+      "month": "2025-07",
+      "events_added": 2
+    },
+    {
+      "month": "2025-08",
+      "events_added": 9
+    },
+    {
+      "month": "2025-09",
+      "events_added": 5
+    },
+    {
+      "month": "2025-10",
+      "events_added": 11
+    },
+    {
+      "month": "2025-11",
+      "events_added": 3
+    }
+  ],
+  "event_velocity": {
+    "events_per_week": 0.97,
+    "events_per_month": 4.17,
+    "tracking_days": 360.0
+  },
+  "active_event_ages": {
+    "min": 2.0,
+    "max": 100.0,
+    "median": 30.0,
+    "average": 37.1
+  }
 }
