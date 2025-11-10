@@ -721,6 +721,341 @@ class TestStatistics(unittest.TestCase):
                 html_content = f.read()
             self.assertIn('EUGLOH Event Statistics', html_content)
             self.assertIn('10', html_content)  # total events
+    
+    def test_enhanced_statistics_new_this_month(self):
+        """Test new_this_month statistic calculation."""
+        from check_events import generate_statistics
+        import time
+        
+        current_time = time.time()
+        two_weeks_ago = current_time - (14 * 24 * 60 * 60)
+        two_months_ago = current_time - (60 * 24 * 60 * 60)
+        
+        history = {
+            'events': {
+                'event1': {
+                    'id': 'event1',
+                    'title': 'Recent Event',
+                    'deadline': '31 Dec 2030 23:59',
+                    'first_seen': int(two_weeks_ago),
+                    'last_seen': int(current_time),
+                    'expired_at': None,
+                },
+                'event2': {
+                    'id': 'event2',
+                    'title': 'Old Event',
+                    'deadline': '31 Dec 2030 23:59',
+                    'first_seen': int(two_months_ago),
+                    'last_seen': int(current_time),
+                    'expired_at': None,
+                }
+            }
+        }
+        
+        state = {'seen_ids': ['event1', 'event2']}
+        stats = generate_statistics(history, state)
+        
+        self.assertEqual(stats['new_this_month'], 1)
+        self.assertEqual(stats['new_this_week'], 0)
+    
+    def test_registration_duration_statistics(self):
+        """Test registration duration min/max/median/average calculations."""
+        from check_events import generate_statistics
+        import time
+        
+        current_time = time.time()
+        
+        history = {
+            'events': {
+                'event1': {
+                    'id': 'event1',
+                    'title': 'Event 1',
+                    'deadline': '1 Jan 2020 00:00',
+                    'first_seen': int(current_time),
+                    'last_seen': int(current_time),
+                    'expired_at': int(current_time),
+                    'registration_duration_days': 10.0,
+                },
+                'event2': {
+                    'id': 'event2',
+                    'title': 'Event 2',
+                    'deadline': '1 Jan 2020 00:00',
+                    'first_seen': int(current_time),
+                    'last_seen': int(current_time),
+                    'expired_at': int(current_time),
+                    'registration_duration_days': 30.0,
+                },
+                'event3': {
+                    'id': 'event3',
+                    'title': 'Event 3',
+                    'deadline': '1 Jan 2020 00:00',
+                    'first_seen': int(current_time),
+                    'last_seen': int(current_time),
+                    'expired_at': int(current_time),
+                    'registration_duration_days': 50.0,
+                }
+            }
+        }
+        
+        state = {'seen_ids': ['event1', 'event2', 'event3']}
+        stats = generate_statistics(history, state)
+        
+        self.assertIsNotNone(stats.get('registration_duration_stats'))
+        rd_stats = stats['registration_duration_stats']
+        self.assertEqual(rd_stats['min'], 10.0)
+        self.assertEqual(rd_stats['max'], 50.0)
+        self.assertEqual(rd_stats['median'], 30.0)
+        self.assertEqual(rd_stats['average'], 30.0)
+        self.assertEqual(rd_stats['total_completed'], 3)
+    
+    def test_event_velocity_calculation(self):
+        """Test event velocity (events per week/month) calculation."""
+        from check_events import generate_statistics
+        import time
+        
+        current_time = time.time()
+        days_30 = 30 * 24 * 60 * 60
+        
+        # Create 10 events spread over 30 days
+        history = {'events': {}}
+        for i in range(10):
+            event_id = f'event{i}'
+            history['events'][event_id] = {
+                'id': event_id,
+                'title': f'Event {i}',
+                'deadline': '31 Dec 2030 23:59',
+                'first_seen': int(current_time - days_30 + (i * days_30 / 10)),
+                'last_seen': int(current_time),
+                'expired_at': None,
+            }
+        
+        state = {'seen_ids': list(history['events'].keys())}
+        stats = generate_statistics(history, state)
+        
+        self.assertIn('event_velocity', stats)
+        velocity = stats['event_velocity']
+        self.assertIn('events_per_week', velocity)
+        self.assertIn('events_per_month', velocity)
+        self.assertGreater(velocity['events_per_week'], 0)
+        self.assertGreater(velocity['events_per_month'], 0)
+    
+    def test_long_running_events_detection(self):
+        """Test detection of long-running events (active > 60 days)."""
+        from check_events import generate_statistics
+        import time
+        
+        current_time = time.time()
+        days_70 = 70 * 24 * 60 * 60
+        days_10 = 10 * 24 * 60 * 60
+        
+        history = {
+            'events': {
+                'event1': {
+                    'id': 'event1',
+                    'title': 'Long Running Event',
+                    'deadline': '31 Dec 2030 23:59',
+                    'first_seen': int(current_time - days_70),
+                    'last_seen': int(current_time),
+                    'expired_at': None,
+                },
+                'event2': {
+                    'id': 'event2',
+                    'title': 'Short Event',
+                    'deadline': '31 Dec 2030 23:59',
+                    'first_seen': int(current_time - days_10),
+                    'last_seen': int(current_time),
+                    'expired_at': None,
+                }
+            }
+        }
+        
+        state = {'seen_ids': ['event1', 'event2']}
+        stats = generate_statistics(history, state)
+        
+        self.assertIn('long_running_events', stats)
+        self.assertEqual(len(stats['long_running_events']), 1)
+        self.assertEqual(stats['long_running_events'][0]['title'], 'Long Running Event')
+        self.assertGreater(stats['long_running_events'][0]['days_active'], 60)
+    
+    def test_recently_expired_events(self):
+        """Test recently expired events tracking."""
+        from check_events import generate_statistics
+        import time
+        
+        current_time = time.time()
+        days_3 = 3 * 24 * 60 * 60
+        days_10 = 10 * 24 * 60 * 60
+        
+        history = {
+            'events': {
+                'event1': {
+                    'id': 'event1',
+                    'title': 'Recently Expired',
+                    'deadline': '1 Jan 2020 00:00',
+                    'first_seen': int(current_time - days_3),
+                    'last_seen': int(current_time),
+                    'expired_at': int(current_time - days_3),
+                    'registration_duration_days': 30.0,
+                },
+                'event2': {
+                    'id': 'event2',
+                    'title': 'Old Expired',
+                    'deadline': '1 Jan 2020 00:00',
+                    'first_seen': int(current_time - days_10),
+                    'last_seen': int(current_time),
+                    'expired_at': int(current_time - days_10),
+                    'registration_duration_days': 45.0,
+                }
+            }
+        }
+        
+        state = {'seen_ids': ['event1', 'event2']}
+        stats = generate_statistics(history, state)
+        
+        self.assertIn('recently_expired', stats)
+        self.assertEqual(len(stats['recently_expired']), 1)
+        self.assertEqual(stats['recently_expired'][0]['title'], 'Recently Expired')
+    
+    def test_monthly_trends(self):
+        """Test monthly trends calculation."""
+        from check_events import generate_statistics
+        import time
+        from datetime import datetime, timedelta
+        
+        current_time = time.time()
+        
+        # Create events across multiple months
+        history = {'events': {}}
+        for month_offset in range(3):
+            for event_num in range(2):
+                event_id = f'event_m{month_offset}_{event_num}'
+                event_time = current_time - (month_offset * 30 * 24 * 60 * 60)
+                history['events'][event_id] = {
+                    'id': event_id,
+                    'title': f'Event {month_offset}-{event_num}',
+                    'deadline': '31 Dec 2030 23:59',
+                    'first_seen': int(event_time),
+                    'last_seen': int(current_time),
+                    'expired_at': None,
+                }
+        
+        state = {'seen_ids': list(history['events'].keys())}
+        stats = generate_statistics(history, state)
+        
+        self.assertIn('monthly_trends', stats)
+        self.assertIsInstance(stats['monthly_trends'], list)
+        self.assertGreater(len(stats['monthly_trends']), 0)
+        
+        # Check structure of trend data
+        if stats['monthly_trends']:
+            trend = stats['monthly_trends'][0]
+            self.assertIn('month', trend)
+            self.assertIn('events_added', trend)
+    
+    def test_active_event_ages(self):
+        """Test active event age statistics."""
+        from check_events import generate_statistics
+        import time
+        
+        current_time = time.time()
+        
+        history = {
+            'events': {
+                'event1': {
+                    'id': 'event1',
+                    'title': 'Event 1',
+                    'deadline': '31 Dec 2030 23:59',
+                    'first_seen': int(current_time - (10 * 24 * 60 * 60)),
+                    'last_seen': int(current_time),
+                    'expired_at': None,
+                },
+                'event2': {
+                    'id': 'event2',
+                    'title': 'Event 2',
+                    'deadline': '31 Dec 2030 23:59',
+                    'first_seen': int(current_time - (20 * 24 * 60 * 60)),
+                    'last_seen': int(current_time),
+                    'expired_at': None,
+                },
+                'event3': {
+                    'id': 'event3',
+                    'title': 'Event 3',
+                    'deadline': '31 Dec 2030 23:59',
+                    'first_seen': int(current_time - (30 * 24 * 60 * 60)),
+                    'last_seen': int(current_time),
+                    'expired_at': None,
+                }
+            }
+        }
+        
+        state = {'seen_ids': ['event1', 'event2', 'event3']}
+        stats = generate_statistics(history, state)
+        
+        self.assertIn('active_event_ages', stats)
+        ages = stats['active_event_ages']
+        self.assertIn('min', ages)
+        self.assertIn('max', ages)
+        self.assertIn('median', ages)
+        self.assertIn('average', ages)
+        self.assertGreater(ages['max'], ages['min'])
+    
+    def test_enhanced_html_includes_new_sections(self):
+        """Test that enhanced HTML includes new statistics sections."""
+        from check_events import save_statistics
+        
+        with tempfile.TemporaryDirectory() as tmpdir:
+            json_path = os.path.join(tmpdir, 'stats.json')
+            html_path = os.path.join(tmpdir, 'stats.html')
+            
+            stats = {
+                'generated_at': int(time.time()),
+                'total_events_tracked': 10,
+                'currently_active': 5,
+                'total_expired': 5,
+                'new_this_week': 2,
+                'new_this_month': 3,
+                'expired_this_week': 1,
+                'expired_this_month': 2,
+                'upcoming_deadlines': [],
+                'recently_expired': [],
+                'long_running_events': [],
+                'monthly_trends': [
+                    {'month': '2025-01', 'events_added': 5},
+                    {'month': '2025-02', 'events_added': 3}
+                ],
+                'event_velocity': {
+                    'events_per_week': 2.5,
+                    'events_per_month': 10.0,
+                    'tracking_days': 30.0
+                },
+                'registration_duration_stats': {
+                    'min': 10.0,
+                    'max': 50.0,
+                    'median': 30.0,
+                    'average': 30.0,
+                    'total_completed': 5
+                },
+                'active_event_ages': {
+                    'min': 5.0,
+                    'max': 60.0,
+                    'median': 30.0,
+                    'average': 32.5
+                }
+            }
+            
+            save_statistics(stats, json_path, html_path)
+            
+            # Verify HTML includes enhanced sections
+            with open(html_path, 'r') as f:
+                html_content = f.read()
+            
+            self.assertIn('Event Velocity', html_content)
+            self.assertIn('Registration Duration Analysis', html_content)
+            self.assertIn('Active Event Ages', html_content)
+            self.assertIn('Monthly Event Trends', html_content)
+            self.assertIn('Recently Expired', html_content)
+            self.assertIn('Long-Running Events', html_content)
+            self.assertIn('chart.js', html_content.lower())  # Chart library included (case-insensitive)
 
 
 if __name__ == '__main__':
