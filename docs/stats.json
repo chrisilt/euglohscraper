@@ -1,0 +1,22 @@
+{
+  "generated_at": 1762762533,
+  "total_events_tracked": 5,
+  "currently_active": 3,
+  "total_expired": 2,
+  "new_this_week": 0,
+  "upcoming_deadlines": [
+    {
+      "title": "EUGLOH Soft Skills Workshop",
+      "deadline": "20 Nov 2025 18:00",
+      "days_remaining": 10.4,
+      "link": "https://intranet.eugloh.eu/events/active-event-2"
+    },
+    {
+      "title": "Data Science for Health Applications",
+      "deadline": "25 Nov 2025 23:59",
+      "days_remaining": 15.7,
+      "link": "https://intranet.eugloh.eu/events/active-event-3"
+    }
+  ],
+  "average_registration_duration_days": 37.9
+}
