@@ -614,6 +614,7 @@ def save_statistics(stats: Dict, json_path: str, html_path: str):
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EUGLOH Event Statistics</title>
+    <link rel="stylesheet" href="style.css">
     <style>
         .stats-container {{
             max-width: 1200px;
