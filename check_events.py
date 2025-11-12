@@ -1467,17 +1467,18 @@ def main():
     # Deduplicate: only events whose id (normalized link) not in seen
     new_events = [e for e in events if e["id"] not in seen]
     
-    # Save history even if no new events (for last_seen tracking)
-    save_history(HISTORY_FILE, history)
-    
-    # Generate and save statistics
-    stats = generate_statistics(history, state)
-    save_statistics(stats, STATS_FILE, STATS_HTML_FILE)
-    
     if not new_events:
         print("No new events")
         state["last_checked"] = int(time.time())
         save_state(STATE_FILE, state)
+        
+        # Save history even if no new events (for last_seen tracking)
+        save_history(HISTORY_FILE, history)
+        
+        # Generate and save statistics
+        stats = generate_statistics(history, state)
+        save_statistics(stats, STATS_FILE, STATS_HTML_FILE)
+        
         # Update lastBuildDate in feed even when no new items
         update_feed_timestamp(FEED_FILE)
         
