@@ -1091,6 +1091,79 @@ class TestStatistics(unittest.TestCase):
             self.assertIn('Recently Expired', html_content)
             self.assertIn('Long-Running Events', html_content)
             self.assertIn('chart.js', html_content.lower())  # Chart library included (case-insensitive)
+    
+    def test_deadline_timestamp_in_statistics(self):
+        """Test that deadline_timestamp is included in upcoming deadlines for dynamic updates."""
+        from check_events import generate_statistics
+        
+        current_time = time.time()
+        future_time = current_time + (5 * 24 * 60 * 60)  # 5 days from now
+        
+        history = {
+            'events': {
+                'event1': {
+                    'id': 'event1',
+                    'title': 'Upcoming Event',
+                    'deadline': time.strftime("%d %b %Y %H:%M", time.gmtime(future_time)),
+                    'first_seen': int(current_time - 24*60*60),
+                    'last_seen': int(current_time),
+                    'expired_at': None,
+                }
+            }
+        }
+        
+        state = {'seen_ids': ['event1']}
+        stats = generate_statistics(history, state)
+        
+        # Verify deadline_timestamp is included
+        self.assertGreater(len(stats['upcoming_deadlines']), 0)
+        for deadline in stats['upcoming_deadlines']:
+            self.assertIn('deadline_timestamp', deadline)
+            self.assertIsInstance(deadline['deadline_timestamp'], int)
+            self.assertGreater(deadline['deadline_timestamp'], 0)
+    
+    def test_dynamic_time_remaining_in_html(self):
+        """Test that HTML includes JavaScript for dynamic time remaining updates."""
+        from check_events import generate_statistics, save_statistics
+        
+        current_time = time.time()
+        future_time = current_time + (3 * 24 * 60 * 60)  # 3 days from now
+        
+        history = {
+            'events': {
+                'event1': {
+                    'id': 'event1',
+                    'title': 'Test Event',
+                    'deadline': time.strftime("%d %b %Y %H:%M", time.gmtime(future_time)),
+                    'first_seen': int(current_time - 24*60*60),
+                    'last_seen': int(current_time),
+                    'expired_at': None,
+                }
+            }
+        }
+        
+        state = {'seen_ids': ['event1']}
+        stats = generate_statistics(history, state)
+        
+        with tempfile.TemporaryDirectory() as tmpdir:
+            json_path = os.path.join(tmpdir, 'stats.json')
+            html_path = os.path.join(tmpdir, 'stats.html')
+            
+            save_statistics(stats, json_path, html_path)
+            
+            with open(html_path, 'r') as f:
+                html_content = f.read()
+            
+            # Verify HTML includes data-deadline attributes
+            self.assertIn('data-deadline=', html_content)
+            
+            # Verify HTML includes JavaScript for dynamic updates
+            self.assertIn('function updateTimeRemaining()', html_content)
+            self.assertIn('document.addEventListener(\'DOMContentLoaded\', updateTimeRemaining)', html_content)
+            self.assertIn('setInterval(updateTimeRemaining, 60000)', html_content)
+            
+            # Verify class for time remaining cell
+            self.assertIn('class="time-remaining"', html_content)
 
 
 if __name__ == '__main__':
