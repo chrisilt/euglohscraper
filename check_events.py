@@ -625,6 +625,7 @@ def generate_statistics(history: Dict, state: Dict) -> Dict:
                             "title": event_data.get("title", "Unknown"),
                             "deadline": event_data.get("deadline", ""),
                             "days_remaining": round(days_until, 1),
+                            "deadline_timestamp": int(deadline_ts),
                             "link": event_data.get("link", "")
                         })
         
@@ -711,11 +712,12 @@ def save_statistics(stats: Dict, json_path: str, html_path: str):
     # Build upcoming deadlines table
     upcoming_html = ""
     for deadline in stats.get("upcoming_deadlines", []):
+        deadline_ts = deadline.get('deadline_timestamp', 0)
         upcoming_html += f"""
-        <tr>
+        <tr data-deadline="{deadline_ts}">
             <td><a href="{deadline['link']}" target="_blank">{deadline['title']}</a></td>
             <td>{deadline['deadline']}</td>
-            <td>{deadline['days_remaining']} days</td>
+            <td class="time-remaining">{deadline['days_remaining']} days</td>
         </tr>"""
     
     if not upcoming_html:
@@ -1089,6 +1091,46 @@ def save_statistics(stats: Dict, json_path: str, html_path: str):
     </div>
     
     <script>
+        // Function to update time remaining dynamically
+        function updateTimeRemaining() {{
+            const now = Math.floor(Date.now() / 1000); // Current time in seconds
+            const rows = document.querySelectorAll('tr[data-deadline]');
+            
+            rows.forEach(row => {{
+                const deadlineTs = parseInt(row.getAttribute('data-deadline'));
+                if (deadlineTs) {{
+                    const secondsRemaining = deadlineTs - now;
+                    const daysRemaining = secondsRemaining / (24 * 60 * 60);
+                    
+                    const timeCell = row.querySelector('.time-remaining');
+                    if (timeCell) {{
+                        if (daysRemaining < 0) {{
+                            timeCell.textContent = 'Expired';
+                            timeCell.style.color = '#dc3545';
+                            timeCell.style.fontWeight = 'bold';
+                        }} else if (daysRemaining < 1) {{
+                            const hoursRemaining = Math.floor(secondsRemaining / 3600);
+                            timeCell.textContent = hoursRemaining + ' hours';
+                            timeCell.style.color = '#dc3545';
+                            timeCell.style.fontWeight = 'bold';
+                        }} else if (daysRemaining < 7) {{
+                            timeCell.textContent = Math.round(daysRemaining * 10) / 10 + ' days';
+                            timeCell.style.color = '#ffc107';
+                            timeCell.style.fontWeight = 'bold';
+                        }} else {{
+                            timeCell.textContent = Math.round(daysRemaining * 10) / 10 + ' days';
+                        }}
+                    }}
+                }}
+            }});
+        }}
+        
+        // Update time remaining when page loads
+        document.addEventListener('DOMContentLoaded', updateTimeRemaining);
+        
+        // Optional: Update every minute to keep it fresh
+        setInterval(updateTimeRemaining, 60000);
+        
         // Monthly trends chart
         const chartData = {chart_data_json};
         if (chartData.labels.length > 0) {{
